@@ -19,9 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _error;
 
   Future<void> _login() async {
-    final url = Uri.parse(
-      'http://localhost:8080/login',
-    ); // Замените на ваш адрес
+    final url = Uri.parse('http://localhost:8080/login',); // Замените на ваш адрес
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

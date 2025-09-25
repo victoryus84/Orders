@@ -8,8 +8,8 @@ type User struct {
 	Email    string `json:"email" gorm:"unique"` // Email пользователя (уникальный)
 	Password string `json:"-"`                   // Хэш пароля (не выводится в JSON)
 	Role     string `json:"role"`                // Роль пользователя ("admin", "user" и т.д.)
-	CanalID   uint   `json:"canal_id"` 			 // внешний ключ на канал продаж
-    Canal     Canal  `json:"canal" gorm:"foreignKey:CanalID"` // Канал продаж пользователя
+	CanalID   *uint   `json:"canal_id"` 			 // внешний ключ на канал продаж
+    Canal     *Canal  `json:"canal" gorm:"foreignKey:CanalID"` // Канал продаж пользователя
 }
 
 // Canal - Канал продаж
