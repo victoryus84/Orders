@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '/services/auth_service.dart';
 import 'pages/0_0_login.dart';
@@ -47,6 +48,9 @@ class MyApp extends StatelessWidget {
       title: 'Orders App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
+        textTheme: GoogleFonts.robotoTextTheme(
+          Theme.of(context).textTheme,
+        ),
       ),
       routerConfig: _router,
     );
