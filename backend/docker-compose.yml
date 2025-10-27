@@ -15,6 +15,7 @@ services:
       retries: 5
     networks:
       - app-network
+
   api:
     build: .
     container_name: gorm_api
@@ -26,6 +27,7 @@ services:
     command: ["/app/server"]
     networks:
       - app-network
+
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -42,21 +44,25 @@ services:
     networks:
       - app-network
     restart: unless-stopped
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
+
+  # Сервис для первоначального получения сертификата
+  certbot-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot-init
+    container_name: certbot-init
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_conf:/etc/letsencrypt
-      - ./scripts:/scripts:ro
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
-    command: ["sh", "/scripts/certbot-init.sh"]
     depends_on:
       - nginx
     networks:
       - app-network
+    
+  # Сервис для автоматического обновления
   certbot-renew:
     build:
       context: .

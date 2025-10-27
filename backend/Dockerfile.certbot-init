@@ -1,0 +1,8 @@
+FROM certbot/certbot:latest
+
+# Копируем скрипт инициализации
+COPY scripts/certbot-init.sh /usr/local/bin/certbot-init.sh
+RUN chmod +x /usr/local/bin/certbot-init.sh
+
+# Устанавливаем скрипт как точку входа
+ENTRYPOINT ["/usr/local/bin/certbot-init.sh"]
