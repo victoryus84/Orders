@@ -26,7 +26,6 @@ services:
     command: ["/app/server"]
     networks:
       - app-network
-
   nginx:
     image: nginx:alpine
     container_name: nginx
@@ -36,25 +35,45 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/ssl:/etc/nginx/ssl
-      # - certbot_www:/var/www/certbot
-      # - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt:ro
     depends_on:
       - api
     networks:
       - app-network
     restart: unless-stopped
-
   certbot:
     image: certbot/certbot
     container_name: certbot
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_conf:/etc/letsencrypt
-    command: certonly --webroot -w /var/www/certbot --email victorcostiuc@gmail.com -d servidar.work.gd --agree-tos --no-eff-email --force-renewal
+      - ./scripts:/scripts:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+    command: ["sh", "/scripts/certbot-init.sh"]
     depends_on:
       - nginx
     networks:
       - app-network
+  certbot-renew:
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot-renew
+    container_name: certbot-renew
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+    depends_on:
+      - nginx
+    networks:
+      - app-network
+    restart: unless-stopped
 
 networks:
   app-network:

@@ -1,0 +1,26 @@
+FROM certbot/certbot:latest
+
+# Устанавливаем необходимые пакеты
+RUN apk add --no-cache \
+    docker-cli \
+    curl \
+    tini
+
+# Создаём скрипт для обновления с логированием
+RUN echo '#!/bin/sh\n\
+    echo "$(date): Starting certificate renewal"\n\
+    certbot renew --webroot -w /var/www/certbot\n\
+    if [ $? -eq 0 ]; then\n\
+    echo "$(date): Certificates renewed successfully, restarting nginx"\n\
+    docker container restart nginx\n\
+    echo "$(date): Nginx restarted"\n\
+    else\n\
+    echo "$(date): Certificate renewal failed"\n\
+    fi' > /renew-certificates.sh && \
+    chmod +x /renew-certificates.sh
+
+# Создаём cron задание
+RUN echo "0 3 * * 1 /renew-certificates.sh >> /var/log/certbot-renewal.log 2>&1" > /etc/crontabs/root
+
+# Используем tini как init процесс для корректной обработки сигналов
+CMD ["tini", "--", "crond", "-f", "-d", "8"]
