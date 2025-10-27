@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:shared_preferences/shared_preferences.dart';
+import '/services/auth_service.dart'; // Импортируем AuthService
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,31 +17,54 @@ class _LoginPageState extends State<LoginPage> {
   String _email = '';
   String _password = '';
   String? _error;
+  bool _isLoading = false;
 
   Future<void> _login() async {
-    final url = Uri.parse('http://localhost:8080/login',); // Замените на ваш адрес
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': _email, 'password': _password}),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final token = data['token'];
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', token); // сохраняем токен
-      // Сохраните токен, если нужно
+    if (_formKey.currentState!.validate()) {
       setState(() {
+        _isLoading = true;
         _error = null;
       });
-      // Перенаправление на меню
-      if (context.mounted) {
-        GoRouter.of(context).go('/0_1_menu');
+
+      try {
+        final url = Uri.parse('https://servidar.work.gd/login');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'email': _email, 'password': _password}),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final token = data['token'];
+
+          // Используем AuthService для сохранения токена
+          await AuthService.saveToken(token);
+
+          setState(() {
+            _error = null;
+          });
+
+          // Перенаправление на меню
+          if (context.mounted) {
+            GoRouter.of(context).go('/0_1_menu');
+          }
+        } else {
+          setState(() {
+            _error = 'Неверный логин или пароль';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _error = 'Ошибка подключения: $e';
+        });
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
-    } else {
-      setState(() {
-        _error = 'Неверный логин или пароль';
-      });
     }
   }
 
@@ -73,14 +96,11 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 24),
               if (_error != null)
                 Text(_error!, style: const TextStyle(color: Colors.red)),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _login();
-                  }
-                },
-                child: const Text('Войти'),
-              ),
+
+              if (_isLoading)
+                const CircularProgressIndicator()
+              else
+                ElevatedButton(onPressed: _login, child: const Text('Войти')),
             ],
           ),
         ),

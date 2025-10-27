@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,8 +12,25 @@ import 'pages/2_0_equipment.dart';
 import 'pages/3_0_calculations.dart';
 import 'pages/4_0_shipment.dart';
 
-void main() {
+Future<void> main() async {
+  // Инициализируем AuthService до запуска приложения
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService.init();
+
+  HttpOverrides.global = MyHttpOverrides();
+  
   runApp(const MyApp());
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
+        // Разрешаем самоподписанные сертификаты для вашего домена и IP
+        return host == 'servidar.work.gd' || host == '217.26.172.96';
+      };
+  }
 }
 
 final _router = GoRouter(
@@ -27,13 +45,22 @@ final _router = GoRouter(
     GoRoute(path: '/4_0_shipment', builder: (context, state) => const ShipmentPage(title: "Отгрузка 4 мес."),),
 ],
 
-/// 🔹 Асинхронный redirect (при старте приложения загружаем токен из памяти)
+  /// 🔹 Синхронный redirect (используем кешированный токен)
   redirect: (context, state) {
-    final token = AuthService.getToken();
+    final token = AuthService.token; // Синхронный доступ к токену
     final loggingIn = state.matchedLocation == '/0_0_login';
 
-    if (token == null && !loggingIn) return '/0_0_login';
-    if (loggingIn) return '/0_1_menu';
+    // Если нет токена и не на странице логина - на логин
+    if (token == null && !loggingIn) {
+      return '/0_0_login';
+    }
+
+    // Если есть токен и на странице логина - в меню
+    if (token != null && loggingIn) {
+      return '/0_1_menu';
+    }
+
+    // Во всех остальных случаях - не перенаправлять
     return null;
   },
 );

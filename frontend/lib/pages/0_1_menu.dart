@@ -1,6 +1,6 @@
-// Главное меню с 5 кнопками
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '/services/auth_service.dart'; // Импортируем AuthService
 
 /// Main menu form with 5 buttons
 class MenuPage extends StatelessWidget {
@@ -55,6 +55,14 @@ class MenuPage extends StatelessWidget {
               ),
               child: const Text("Отгрузка 4 мес."),
             ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                await AuthService.clearToken();
+                GoRouter.of(context).go('/0_0_login');
+              },
+              child: const Text('Выйти'),
+            )
           ],
         ),
       ),
