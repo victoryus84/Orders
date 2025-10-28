@@ -1,15 +1,6 @@
-FROM certbot/certbot:latest
+FROM certbot/certbot
 
-# Устанавливаем необходимые пакеты
-RUN apk add --no-cache docker-cli tini
+COPY ./scripts/certbot-renew.sh /certbot-renew.sh
+RUN chmod +x /certbot-renew.sh
 
-# Копируем скрипты
-COPY scripts/certbot-renew.sh /usr/local/bin/certbot-renew.sh
-COPY scripts/certbot-status.sh /usr/local/bin/certbot-status.sh
-RUN chmod +x /usr/local/bin/certbot-renew.sh /usr/local/bin/certbot-status.sh
-
-# Создаём cron задание для автоматического обновления
-RUN echo "0 3 * * 1 /usr/local/bin/certbot-renew.sh >> /var/log/certbot-renewal.log 2>&1" > /etc/crontabs/root
-
-# Устанавливаем cron как точку входа
-CMD ["tini", "--", "crond", "-f", "-d", "8"]
+CMD ["/bin/sh", "-c", "while true; do /certbot-renew.sh; sleep ${RENEW_INTERVAL}; done"]

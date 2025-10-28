@@ -1,8 +1,6 @@
-FROM certbot/certbot:latest
+FROM certbot/certbot
 
-# Копируем скрипт инициализации
-COPY scripts/certbot-init.sh /usr/local/bin/certbot-init.sh
-RUN chmod +x /usr/local/bin/certbot-init.sh
+VOLUME /var/www/certbot
+VOLUME /etc/letsencrypt
 
-# Устанавливаем скрипт как точку входа
-ENTRYPOINT ["/usr/local/bin/certbot-init.sh"]
+CMD ["certbot", "certonly", "--webroot", "--webroot-path", "/var/www/certbot", "--email", "${EMAIL}", "--agree-tos", "--no-eff-email", "-d", "${DOMAIN}"]
