@@ -1,7 +1,6 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: postgres_16_alp
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -15,48 +14,56 @@ services:
       retries: 5
     networks:
       - app-network
+
   api:
-    build: .
-    container_name: gorm_api
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     env_file:
       - .env
     command: ["/app/server"]
     networks:
       - app-network
+
   nginx:
-    image: nginx:alpine
-    container_name: nginx
+    build: 
+      context: .
+      dockerfile: Dockerfile.nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/ssl:/etc/nginx/ssl
       - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_conf:/etc/letsencrypt
+    environment:
+      - DOMAIN=${DOMAIN}
     depends_on:
       - api
     networks:
       - app-network
     restart: unless-stopped
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
+
+  # Сервис для первоначального получения сертификата
+  certbot-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.certbot-init
+    container_name: certbot-init
     volumes:
       - certbot_www:/var/www/certbot
       - certbot_conf:/etc/letsencrypt
-      - ./scripts:/scripts:ro
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
-    command: ["sh", "/scripts/certbot-init.sh"]
     depends_on:
       - nginx
     networks:
       - app-network
+    restart: "no"
+    
+  # Сервис для автоматического обновления
   certbot-renew:
     build:
       context: .
@@ -69,6 +76,7 @@ services:
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
+      - RENEW_INTERVAL=60d
     depends_on:
       - nginx
     networks:
