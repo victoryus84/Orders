@@ -1,9 +1,6 @@
-version: "3.9"
-
 services:
-  db:
+  postgres:
     image: postgres:16-alpine
-    container_name: postgres_16_alp
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -17,11 +14,13 @@ services:
       retries: 5
     networks:
       - app-network
+
   api:
-    build: .
-    container_name: gorm_api
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     env_file:
       - .env
@@ -31,18 +30,29 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: nginx
     ports:
       - "80:80"
       - "443:443"
+    env_file:
+      - .env  
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/secure/:/etc/nginx/templates/
       - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/certbot/www:/var/www/certbot
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/99-autoreload.sh:/docker-entrypoint.d/99-autoreload.sh
     depends_on:
       - api
     networks:
       - app-network
     restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"  
 
 networks:
   app-network:

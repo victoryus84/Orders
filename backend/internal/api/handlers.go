@@ -27,6 +27,12 @@ type Service interface {
 }
 
 func SetupRoutes(router *gin.Engine, service Service) {
+
+	// --- Health-check ---
+    router.GET("/health", func(c *gin.Context) {
+        c.JSON(http.StatusOK, gin.H{"status": "ok"})
+    })
+	// --- Auth ---
 	router.POST("/signup", func(context *gin.Context) {
 		var req struct {
 			Email    string `json:"email"`
