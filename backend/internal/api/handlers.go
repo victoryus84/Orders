@@ -29,9 +29,9 @@ type Service interface {
 func SetupRoutes(router *gin.Engine, service Service) {
 
 	// --- Health-check ---
-    router.GET("/health", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "ok"})
-    })
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 	// --- Auth ---
 	router.POST("/signup", func(context *gin.Context) {
 		var req struct {
@@ -115,6 +115,8 @@ func SetupRoutes(router *gin.Engine, service Service) {
 				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
+			// Берём владельца из токена, а не из тела запроса
+			client.UserID = context.GetUint("user_id")
 			if err := service.CreateClient(&client); err != nil {
 				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
