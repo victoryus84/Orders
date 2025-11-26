@@ -1,5 +1,5 @@
 services:
-  db:
+  postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -20,7 +20,8 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - db
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     command: ["/app/server"]
@@ -28,60 +29,30 @@ services:
       - app-network
 
   nginx:
-    build: 
-      context: .
-      dockerfile: Dockerfile.nginx
+    image: nginx:alpine
     ports:
       - "80:80"
       - "443:443"
+    env_file:
+      - .env  
     volumes:
-      - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt
-    environment:
-      - DOMAIN=${DOMAIN}
+      - ./nginx/secure/:/etc/nginx/templates/
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/certbot/www:/var/www/certbot
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/99-autoreload.sh:/docker-entrypoint.d/99-autoreload.sh
     depends_on:
       - api
     networks:
       - app-network
     restart: unless-stopped
 
-  # Сервис для первоначального получения сертификата
-  certbot-init:
-    build:
-      context: .
-      dockerfile: Dockerfile.certbot-init
-    container_name: certbot-init
+  certbot:
+    image: certbot/certbot
     volumes:
-      - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt
-    environment:
-      - DOMAIN=${DOMAIN}
-      - EMAIL=${EMAIL}
-    depends_on:
-      - nginx
-    networks:
-      - app-network
-    restart: "no"
-    
-  # Сервис для автоматического обновления
-  certbot-renew:
-    build:
-      context: .
-      dockerfile: Dockerfile.certbot-renew
-    container_name: certbot-renew
-    volumes:
-      - certbot_www:/var/www/certbot
-      - certbot_conf:/etc/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - DOMAIN=${DOMAIN}
-      - EMAIL=${EMAIL}
-      - RENEW_INTERVAL=60d
-    depends_on:
-      - nginx
-    networks:
-      - app-network
-    restart: unless-stopped
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"  
 
 networks:
   app-network:
@@ -89,5 +60,3 @@ networks:
 
 volumes:
   pgdata:
-  certbot_www:
-  certbot_conf:
