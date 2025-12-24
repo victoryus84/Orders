@@ -59,6 +59,7 @@ class MenuPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 await AuthService.clearToken();
+                // ignore: use_build_context_synchronously
                 GoRouter.of(context).go('/0_0_login');
               },
               child: const Text('Выйти'),

@@ -10,10 +10,10 @@ class OrdersCreatePage extends StatefulWidget {
   const OrdersCreatePage({super.key, required this.title});
 
   @override
-  _OrdersCreatePageState createState() => _OrdersCreatePageState();
+  OrdersCreatePageState createState() => OrdersCreatePageState();
 }
 
-class _OrdersCreatePageState extends State<OrdersCreatePage> {
+class OrdersCreatePageState extends State<OrdersCreatePage> {
   @override  
   Widget build(BuildContext context) {
 

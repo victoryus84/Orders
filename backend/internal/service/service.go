@@ -92,7 +92,7 @@ func (service *Service) CreateOrder(userID uint, order *models.Order) error {
 		order.OrderItems[i].Price = product.Price
 		total += product.Price * float64(order.OrderItems[i].Quantity)
 	}
-	order.UserID = userID
+	order.OwnerID = userID
 	order.TotalPrice = total
 	order.Status = "pending"
 	return service.repository.CreateOrder(order)

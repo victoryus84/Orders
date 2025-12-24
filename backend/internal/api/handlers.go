@@ -3,10 +3,7 @@ package api
 import (
 	"net/http"
 	"orders/internal/models"
-
-	//"orders/internal/service"
 	"strconv"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -69,71 +66,16 @@ func SetupRoutes(router *gin.Engine, service Service) {
 
 	protected := router.Group("/").Use(authMiddleware())
 	{
-		protected.POST("/orders", func(context *gin.Context) {
-			userID := context.GetUint("user_id")
-			var order models.Order
-			if err := context.ShouldBindJSON(&order); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			if err := service.CreateOrder(userID, &order); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			context.JSON(http.StatusOK, order)
-		})
-
-		protected.GET("/orders", func(context *gin.Context) {
-			userID := context.GetUint("user_id")
-			orders, err := service.FindOrdersByUserID(userID)
-			if err != nil {
-				context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-			context.JSON(http.StatusOK, orders)
-		})
-
-		protected.GET("/orders/:id", func(context *gin.Context) {
-			userID := context.GetUint("user_id")
-			id, _ := strconv.Atoi(context.Param("id"))
-			order, err := service.FindOrderByID(uint(id))
-			if err != nil {
-				context.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
-				return
-			}
-			if order.UserID != userID {
-				context.JSON(http.StatusForbidden, gin.H{"error": "Not authorized"})
-				return
-			}
-			context.JSON(http.StatusOK, order)
-		})
+	
+		// --- Orders ---
+		protected.POST("/orders", CreateOrderHandler(service))
+		protected.GET("/orders", GetOrdersHandler(service))
+		protected.GET("/orders/:id", GetOrderHandler(service))
 
 		// --- Clients ---
-		protected.POST("/clients", func(context *gin.Context) {
-			var client models.Client
-			if err := context.ShouldBindJSON(&client); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			// Берём владельца из токена, а не из тела запроса
-			client.UserID = context.GetUint("user_id")
-			if err := service.CreateClient(&client); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			context.JSON(http.StatusOK, client)
-		})
-
-		protected.GET("/clients/:id", func(context *gin.Context) {
-			id, _ := strconv.Atoi(context.Param("id"))
-			client, err := service.FindClientByID(uint(id))
-			if err != nil {
-				context.JSON(http.StatusNotFound, gin.H{"error": "Client not found"})
-				return
-			}
-			context.JSON(http.StatusOK, client)
-		})
-
+		protected.POST("/clients", CreateClientHandler(service))
+		protected.GET("/clients/:id", GetClientHandler(service))
+		
 		// --- Contracts ---
 		protected.POST("/contracts", func(context *gin.Context) {
 			var contract models.Contract

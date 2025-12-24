@@ -7,14 +7,13 @@ import (
 	"orders/internal/models"
 	"orders/internal/repository"
 	"orders/internal/service"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func main() {
-	// Конфигурация
+	// Configuration
 	cfg := config.Load()
 
 	//log.Println("DSN:", cfg.DSN)
@@ -25,8 +24,8 @@ func main() {
 		log.Fatal("failed to connect database:", err)
 	}
 
-	// Миграции
-	// Миграция схемы
+	// Migrate
+	// Migrate schema
     err = db.AutoMigrate(
         &models.User{},
         &models.Client{},
@@ -42,11 +41,11 @@ func main() {
 
     log.Println("Migration completed successfully")
 
-	// Репозитории и сервисы
+	// Repository and Service
 	repo := repository.NewRepository(db)
 	svc := service.NewService(repo, cfg.JWTSecret)
 
-	// Роутер
+	// Router
 	r := gin.Default()
 	api.SetupRoutes(r, svc)
 

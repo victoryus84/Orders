@@ -2,81 +2,97 @@ package models
 
 import "gorm.io/gorm"
 
-// User - Пользователь системы
+// ********** User - Utilizatorul sistemului **********
 type User struct {
-	gorm.Model
-	Email    string `json:"email" gorm:"unique"` // Email пользователя (уникальный)
-	Password string `json:"-"`                   // Хэш пароля (не выводится в JSON)
-	Role     string `json:"role"`                // Роль пользователя ("admin", "user" и т.д.)
-	CanalID   *uint   `json:"canal_id"` 			 // внешний ключ на канал продаж
-    Canal     *Canal  `json:"canal" gorm:"foreignKey:CanalID"` // Канал продаж пользователя
+    gorm.Model
+    Email    string `gorm:"unique;not null"`    // Email-ul utilizatorului (unic)
+    Password string `gorm:"not null"`           // Hash-ul parolei (nu se afișează în JSON)
+    Role     string                             // Rolul utilizatorului ("admin", "user" etc.)
+    CanalID  *uint                              // Cheie externă către canalul de vânzări
+    Canal    *Canal `gorm:"foreignKey:CanalID"` // Canalul de vânzări al utilizatorului
 }
+// ****************************************************
 
-// Canal - Канал продаж
+// ********** Canal - Canal de vânzări **********
 type Canal struct {
-	gorm.Model
-	Name      string     `gorm:"type:varchar(100);not null"`        // Имя клиента
+    gorm.Model
+    Name string `gorm:"type:varchar(100);not null"` // Numele canalului
 }
+// ****************************************************
 
-// Client - Клиент (заказчик)
+// ********** Client - Client (beneficiar) **********
 type Client struct {
-	gorm.Model
-	Name      string     `gorm:"type:varchar(100);not null"`        // Имя клиента
-	Email     string     `gorm:"type:varchar(100);unique;not null"` // Email клиента (уникальный)
-	Phone     string     `gorm:"type:varchar(20)"`                  // Телефон клиента
-	Address   string     `gorm:"type:text"`                         // Адрес клиента
-	UserID    uint       `gorm:"not null"`                          // ID пользователя-владельца
-	Contracts []Contract `gorm:"foreignKey:ClientID"`               // Договоры клиента
+    gorm.Model
+    Name      string     `gorm:"type:varchar(100);not null"`        // Numele clientului
+    Email     string     `gorm:"type:varchar(100);unique;not null"` // Email-ul clientului (unic)
+    Phone     string     `gorm:"type:varchar(20)"`                  // Telefonul clientului
+    Address   string     `gorm:"type:text"`                         // Adresa clientului
+    OwnerID   uint       `gorm:"not null"`                          // ID-ul ownerului (utilizatorului)
+    Owner     User       `gorm:"foreignKey:OwnerID;references:ID"`  // Ownerul clientului
+    Contracts []Contract `gorm:"foreignKey:ClientID"`               // Contractele clientului
 }
+// ****************************************************
 
-// Contract - Договор с клиентом
+// ********** Contract - Contract cu clientul **********
 type Contract struct {
-	gorm.Model
-	ClientID  uint              `gorm:"not null"`                          // Внешний ключ к Client
-	Number    string            `gorm:"type:varchar(50);not null;unique"`  // Номер договора
-	Date      string            `gorm:"type:date;not null"`                // Дата договора
-	Amount    float64           `gorm:"type:decimal(10,2);not null"`       // Сумма договора
-	Status    string            `gorm:"type:varchar(20);not null"`         // Статус ("active", "closed" и т.д.)
-	Client    Client            `gorm:"foreignKey:ClientID;references:ID"` // Клиент
-	Addresses []ContractAddress `gorm:"foreignKey:ContractID"`             // Адреса, связанные с договором
+    gorm.Model
+    Number    string            `gorm:"type:varchar(50);not null;unique"`       // Numărul contractului
+    Name      string            `gorm:"type:varchar(100);not null"`             // Numele contractului
+    Date      string            `gorm:"type:date;not null"`                     // Data contractului
+    Amount    float64           `gorm:"type:decimal(10,2);not null"`            // Suma contractului
+    Status    string            `gorm:"type:varchar(20);not null"`              // Statusul ("active", "closed" etc.)
+    Client    Client            `gorm:"foreignKey:ClientID;references:ID"`      // Clientul
+    ClientID  uint              `gorm:"not null"`                               // Cheie externă către Client
+    OwnerID   uint              `gorm:"not null"`                               // ID-ul ownerului (utilizatorului)
+    Owner     User              `gorm:"foreignKey:OwnerID;references:ID"`       // Ownerul contractului
+    Addresses []ContractAddress `gorm:"foreignKey:ContractID"`                  // Adresele asociate contractului
 }
+// ****************************************************
 
-// ContractAddress - Адрес, связанный с договором
+// ********** ContractAddress - Adresă asociată contractului **********
 type ContractAddress struct {
-	gorm.Model
-	ContractID uint     `gorm:"not null"`                            // Внешний ключ к Contract
-	Address    string   `gorm:"type:text;not null"`                  // Адрес
-	Type       string   `gorm:"type:varchar(50)"`                    // Тип адреса ("billing", "shipping" и т.д.)
-	Contract   Contract `gorm:"foreignKey:ContractID;references:ID"` // Договор
+    gorm.Model
+    ContractID uint     `gorm:"not null"`                            // Cheie externă către Contract
+    Address    string   `gorm:"type:text;not null"`                  // Adresa
+    Type       string   `gorm:"type:varchar(50)"`                    // Tipul adresei ("billing", "shipping" etc.)
+    Contract   Contract `gorm:"foreignKey:ContractID;references:ID"` // Contractul
+    OwnerID    uint     `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
+    Owner      User     `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul adresei
 }
+// ****************************************************
 
-// Product - Продукт/товар
+// ********** Product - Produs **********
 type Product struct {
-	gorm.Model
-	Name        string  `json:"name" gorm:"type:varchar(100);not null"`   // Название продукта
-	Price       float64 `json:"price" gorm:"type:decimal(10,2);not null"` // Цена продукта
-	Description string  `json:"description" gorm:"type:text"`             // Описание продукта
+    gorm.Model
+    Name        string  `gorm:"type:varchar(100);not null"`         // Numele produsului
+    Price       float64 `gorm:"type:decimal(10,2);not null"`        // Prețul produsului
+    Description string  `gorm:"type:text"`                          // Descrierea produsului
+    OwnerID     uint    `gorm:"not null"`                           // ID-ul ownerului (utilizatorului)
+    Owner       User    `gorm:"foreignKey:OwnerID;references:ID"`   // Ownerul produsului
 }
+// ****************************************************
 
-// Order - Заказ
+// ********** Order - Comandă **********
 type Order struct {
-	gorm.Model
-	UserID     uint        `json:"user_id" gorm:"not null"`                             // ID пользователя, оформившего заказ
-	ClientID   uint        `json:"client_id" gorm:"not null"`                           // ID клиента (внешний ключ)
-	Client     Client      `json:"client" gorm:"foreignKey:ClientID;references:ID"`     // Клиент, оформивший заказ
-	ContractID uint        `json:"contract_id" gorm:"not null"`                         // ID договора (внешний ключ)
-	Contract   Contract    `json:"contract" gorm:"foreignKey:ContractID;references:ID"` // Договор, по которому оформлен заказ
-	TotalPrice float64     `json:"total_price" gorm:"type:decimal(10,2);not null"`      // Общая сумма заказа
-	Status     string      `json:"status" gorm:"type:varchar(20);not null"`             // Статус заказа
-	OrderItems []OrderItem `json:"order_items" gorm:"foreignKey:OrderID"`               // Позиции заказа
+    gorm.Model
+    OwnerID    uint        `gorm:"not null"`                             // ID-ul ownerului (utilizatorului)
+    Owner      User        `gorm:"foreignKey:OwnerID;references:ID"`     // Ownerul comenzii
+    ClientID   uint        `gorm:"not null"`                             // ID-ul clientului (cheie externă)
+    Client     Client      `gorm:"foreignKey:ClientID;references:ID"`    // Clientul care a plasat comanda
+    ContractID uint        `gorm:"not null"`                             // ID-ul contractului (cheie externă)
+    Contract   Contract    `gorm:"foreignKey:ContractID;references:ID"`  // Contractul asociat comenzii
+    TotalPrice float64     `gorm:"type:decimal(10,2);not null"`          // Suma totală a comenzii
+    Status     string      `gorm:"type:varchar(20);not null"`            // Statusul comenzii
+    OrderItems []OrderItem `gorm:"foreignKey:OrderID"`                   // Pozițiile comenzii
 }
+// ****************************************************
 
-// OrderItem - Позиция заказа
+// ********** OrderItem - Poziție comandă **********
 type OrderItem struct {
-	gorm.Model
-	OrderID   uint    `json:"order_id" gorm:"not null"`                 // ID заказа
-	ProductID uint    `json:"product_id" gorm:"not null"`               // ID продукта
-	Quantity  int     `json:"quantity" gorm:"not null"`                 // Количество
-	Price     float64 `json:"price" gorm:"type:decimal(10,2);not null"` // Цена за единицу на момент заказа
+    gorm.Model
+    OrderID   uint    `gorm:"not null"`                    // ID-ul comenzii
+    ProductID uint    `gorm:"not null"`                    // ID-ul produsului
+    Quantity  int     `gorm:"not null"`                    // Cantitatea
+    Price     float64 `gorm:"type:decimal(10,2);not null"` // Prețul unitar la momentul comenzii
 }
-
+// ****************************************************

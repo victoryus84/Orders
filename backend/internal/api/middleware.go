@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"strings"
 	"orders/internal/config"
-
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
