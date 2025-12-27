@@ -1,6 +1,0 @@
-FROM certbot/certbot
-
-VOLUME /var/www/certbot
-VOLUME /etc/letsencrypt
-
-CMD ["certbot", "certonly", "--webroot", "--webroot-path", "/var/www/certbot", "--email", "${EMAIL}", "--agree-tos", "--no-eff-email", "-d", "${DOMAIN}"]

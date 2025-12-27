@@ -1,6 +1,0 @@
-FROM certbot/certbot
-
-COPY ./scripts/certbot-renew.sh /certbot-renew.sh
-RUN chmod +x /certbot-renew.sh
-
-CMD ["/bin/sh", "-c", "while true; do /certbot-renew.sh; sleep ${RENEW_INTERVAL}; done"]

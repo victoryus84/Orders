@@ -3,13 +3,11 @@ package api
 import (
     "net/http"
     "strconv"
-
     "orders/internal/models"
-
     "github.com/gin-gonic/gin"
 )
 
-// Запрос для создания клиента
+// Handler pentru crearea clientului
 type ClientCreateRequest struct {
     Name    string `json:"name" binding:"required"`
     Email   string `json:"email" binding:"required,email"`
@@ -18,7 +16,6 @@ type ClientCreateRequest struct {
     UserID  uint   `json:"user_id" binding:"required"`
 }
 
-// Обработчик создания клиента
 func CreateClientHandler(s Service) gin.HandlerFunc {
     return func(c *gin.Context) {
         var req ClientCreateRequest
@@ -27,12 +24,14 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
             return
         }
 
+        ownerID := c.GetUint("user_id")
+
         client := &models.Client{
             Name:    req.Name,
             Email:   req.Email,
             Phone:   req.Phone,
             Address: req.Address,
-            UserID:  req.UserID,
+            OwnerID: ownerID,
         }
 
         if err := s.CreateClient(client); err != nil {
@@ -44,7 +43,7 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
     }
 }
 
-// Обработчик получения клиента по id
+// Handler pentru obținerea clientului după id
 func GetClientHandler(s Service) gin.HandlerFunc {
     return func(c *gin.Context) {
         idStr := c.Param("id")
@@ -64,7 +63,7 @@ func GetClientHandler(s Service) gin.HandlerFunc {
     }
 }
 
-// Запрос для создания договора
+// Request pentru crearea contractului
 type ContractCreateRequest struct {
     Number string  `json:"number" binding:"required"`
     Date   string  `json:"date" binding:"required"`
@@ -72,7 +71,7 @@ type ContractCreateRequest struct {
     Status string  `json:"status" binding:"required"`
 }
 
-// Создать договор для клиента (client id в path)
+// Crearea contractului pentru client (client id în path)
 func CreateContractHandler(s Service) gin.HandlerFunc {
     return func(c *gin.Context) {
         idStr := c.Param("id")
@@ -105,7 +104,7 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
     }
 }
 
-// Получить договор по id
+// Obține contractul după id
 func GetContractHandler(s Service) gin.HandlerFunc {
     return func(c *gin.Context) {
         idStr := c.Param("id")
@@ -124,3 +123,4 @@ func GetContractHandler(s Service) gin.HandlerFunc {
         c.JSON(http.StatusOK, contract)
     }
 }
+

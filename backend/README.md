@@ -1,57 +1,65 @@
-# Backend module — Orders (Go)
 
-Документация по backend-модулю проекта Orders.
+# Modulul Backend — Orders (Go)
 
-## Краткое описание
+Documentație pentru modulul backend al proiectului Orders.
 
-Backend реализован на Go с использованием фреймворка Gin для HTTP и GORM для работы с PostgreSQL. Модуль содержит модели, репозитории, сервисный слой и HTTP-обработчики (handlers), которые обрабатывают REST API для управления пользователями, клиентами, договорами и заказами.
 
-## Структура (важные файлы)
+## Descriere scurtă
 
-- `cmd/server/main.go` — точка входа: загрузка конфигурации, подключение к БД, миграции и запуск роутера.
-- `internal/config/config.go` — конфигурация приложения (DSN, секреты JWT и пр.).
-- `internal/models/models.go` — модели GORM: `User`, `Client`, `Contract`, `ContractAddress`, `Product`, `Order`, `OrderItem` и др.
-- `internal/repository` — слои репозиториев для прямой работы с GORM (CRUD операции).
-- `internal/service` — бизнес-логика: обёртка над репозиториями, валидация, дополнительные операции.
-- `internal/api/handlers.go` — регистрация маршрутов и общие HTTP-обработчики (login, signup, защищённые маршруты).
-- `internal/api/clients.go` *(рекомендуется)* — отдельные handlers для работы с клиентами/договорами (если добавлены).
+Backend-ul este implementat în Go folosind framework-ul Gin pentru HTTP și GORM pentru lucrul cu PostgreSQL. Modulul conține modele, repository-uri, strat de servicii și handler-e HTTP care gestionează REST API pentru administrarea utilizatorilor, clienților, contractelor și comenzilor.
 
-> Для поиска конкретных точек входа используйте `grep`/IDE: `SetupRoutes`, `NewService`, `AutoMigrate`.
 
-## Архитектурные принципы
+## Structură (fișiere importante)
 
-- Чёткое разделение ответственности: handlers → service → repository → models.
-- Авторизация через JWT: `/login` возвращает токен, который используется в заголовке `Authorization: Bearer <token>` для защищённых маршрутов.
-- Миграции выполняются автоматически при старте (`AutoMigrate`) — проверяйте реальную схему при продакшн-развёртывании.
+- `cmd/server/main.go` — punctul de intrare: încărcarea configurației, conectarea la BD, migrații și pornirea routerului.
+- `internal/config/config.go` — configurația aplicației (DSN, secrete JWT etc.).
+- `internal/models/models.go` — modele GORM: `User`, `Client`, `Contract`, `ContractAddress`, `Product`, `Order`, `OrderItem` și altele.
+- `internal/repository` — straturi de repository pentru lucrul direct cu GORM (operații CRUD).
+- `internal/service` — logică de business: wrapper peste repository-uri, validare, operații suplimentare.
+- `internal/api/handlers.go` — înregistrarea rutelor și handler-e HTTP generale (login, signup, rute protejate).
+- `internal/api/clients.go` *(recomandat)* — handler-e separate pentru clienți/contracte (dacă sunt adăugate).
 
-## Модели (коротко)
+> Pentru a găsi puncte de intrare specifice folosiți `grep`/IDE: `SetupRoutes`, `NewService`, `AutoMigrate`.
 
-- User — пользователь, хранит email, пароль (хеш), роль и ссылку на канал продаж (CanalID / Canal). Может быть nullable.
-- Client — клиент (заказчик): поля `Name`, `Email`, `Phone`, `Address`, `UserID` (владелец).
-- Contract — договор клиента: `ClientID`, `Number`, `Date`, `Amount`, `Status` и связи на `Client` и `ContractAddress`.
-- ContractAddress, Product, Order, OrderItem — вспомогательные сущности для адресов, товаров и заказов.
 
-Если нужно, откройте `internal/models/models.go` для полной структуры и тегов GORM.
+## Principii arhitecturale
 
-## Основные API endpoints (пример)
+- Separare clară a responsabilităților: handlers → service → repository → models.
+- Autorizare prin JWT: `/login` returnează un token care se folosește în header-ul `Authorization: Bearer <token>` pentru rutele protejate.
+- Migrațiile se execută automat la pornire (`AutoMigrate`) — verificați schema reală la deploy în producție.
 
-Все примеры предполагают, что сервер слушает на `http://localhost:8080`.
 
-- POST /login — вход: принимает JSON `{ "email": "...", "password": "..." }`, возвращает JSON `{ "token": "..." }`.
+## Modele (pe scurt)
 
-- POST /clients — создать клиента (защищённый): header `Authorization: Bearer <token>`; body: `{ "name":"ACME", "email":"acme@example.com", "phone":"...", "address":"..." }`. `UserID` рекомендуется брать из токена на стороне сервера.
+- User — utilizator, stochează email, parolă (hash), rol și legătură la canalul de vânzări (CanalID / Canal). Poate fi nullable.
+- Client — client (beneficiar): câmpuri `Name`, `Email`, `Phone`, `Address`, `UserID` (proprietar).
+- Contract — contractul clientului: `ClientID`, `Number`, `Date`, `Amount`, `Status` și legături către `Client` și `ContractAddress`.
+- ContractAddress, Product, Order, OrderItem — entități auxiliare pentru adrese, produse și comenzi.
 
-- GET /clients/:id — получить клиента по id (включая связанные договоры, если service делает Preload).
+Dacă este necesar, deschideți `internal/models/models.go` pentru structura completă și tag-urile GORM.
 
-- POST /clients/:id/contracts — создать договор для клиента: body `{ "number":"CTR-001","date":"2025-11-01","amount":1000.0,"status":"active" }`.
 
-- GET /contracts/:id — получить договор по id.
+## Principale endpoint-uri API (exemplu)
 
-Проверьте `internal/api/handlers.go` для полной карты маршрутов и middlewares.
+Toate exemplele presupun că serverul ascultă la `http://localhost:8080`.
 
-## Примеры curl
+- POST /login — autentificare: primește JSON `{ "email": "...", "password": "..." }`, returnează JSON `{ "token": "..." }`.
 
-Получить токен (login):
+- POST /clients — creează client (protejată): header `Authorization: Bearer <token>`; body: `{ "name":"ACME", "email":"acme@example.com", "phone":"...", "address":"..." }`. `UserID` se recomandă să fie preluat din token pe server.
+
+- GET /clients/:id — obține client după id (inclusiv contractele asociate, dacă service folosește Preload).
+
+- POST /clients/:id/contracts — creează contract pentru client: body `{ "number":"CTR-001","date":"2025-11-01","amount":1000.0,"status":"active" }`.
+
+- GET /contracts/:id — obține contract după id.
+
+Verificați `internal/api/handlers.go` pentru harta completă a rutelor și middlewares.
+
+
+## Exemple curl
+
+Obține token (login):
+
 
 ```bash
 curl -X POST http://localhost:8080/login \
@@ -59,7 +67,7 @@ curl -X POST http://localhost:8080/login \
   -d '{"email":"user@example.com","password":"secret"}'
 ```
 
-Создать клиента (замените `<token>`):
+Creează client (înlocuiți `<token>`):
 
 ```bash
 curl -X POST http://localhost:8080/clients \
@@ -68,7 +76,7 @@ curl -X POST http://localhost:8080/clients \
   -d '{"name":"ACME","email":"acme@example.com","phone":"123","address":"addr"}'
 ```
 
-Создать договор для клиента id=1:
+Creează contract pentru clientul id=1:
 
 ```bash
 curl -X POST http://localhost:8080/clients/1/contracts \
@@ -77,27 +85,30 @@ curl -X POST http://localhost:8080/clients/1/contracts \
   -d '{"number":"CTR-001","date":"2025-11-01","amount":1000.00,"status":"active"}'
 ```
 
-## JWT и тестирование в Postman
 
-1. Выполните `POST /login` с реальными credentials, сохраните `token` в окружении Postman (Tests script):
+## JWT și testare în Postman
+
+1. Efectuați `POST /login` cu date reale, salvați `token` în environment-ul Postman (Tests script):
 
 ```javascript
 const json = pm.response.json();
 pm.environment.set("auth_token", json.token);
 ```
 
-2. В Authorization для последующих запросов выберите `Bearer Token` и используйте `{{auth_token}}`.
+2. În Authorization pentru următoarele request-uri selectați `Bearer Token` și folosiți `{{auth_token}}`.
 
-3. Если нужно вручную сгенерировать JWT в Pre-request, используйте Secret и алгоритм (HS256). Но безопаснее получать токен от сервера.
+3. Dacă trebuie să generați manual JWT în Pre-request, folosiți Secret și algoritmul (HS256). Dar este mai sigur să obțineți token-ul de la server.
 
-## Миграции и развёртывание
 
-- В `cmd/server/main.go` выполняется `db.AutoMigrate(...)` при старте. Для продакшна лучше использовать явные миграции (migrate tool) и процессы отката.
-- Конфигурация БД берётся из `internal/config` (DSN). Убедитесь, что переменные окружения заданы.
+## Migrații și deploy
 
-## Инициализация сервиса (пример)
+- În `cmd/server/main.go` se execută `db.AutoMigrate(...)` la pornire. Pentru producție este mai bine să folosiți migrații explicite (migrate tool) și procese de rollback.
+- Configurația BD se ia din `internal/config` (DSN). Asigurați-vă că variabilele de mediu sunt setate.
 
-В `cmd/server/main.go` создаётся репозиторий и сервис и передаётся в маршруты:
+
+## Inițializarea serviciului (exemplu)
+
+În `cmd/server/main.go` se creează repository-ul și serviciul și se transmit către rute:
 
 ```go
 repo := repository.NewRepository(db)
@@ -105,31 +116,27 @@ svc := service.NewService(repo, cfg.JWTSecret)
 api.SetupRoutes(r, svc)
 ```
 
-Service содержит методы для: регистрации/логина, создания клиентов/договоров, получения сущностей и т.д.
+Service conține metode pentru: înregistrare/login, creare clienți/contracte, obținere entități etc.
 
-## Советы по безопасности и валидации
 
-- Пароли храните только в виде хеша (bcrypt).
-- Проверяйте ownership: client.UserID следует заполнять серверно (из токена), а не позволять клиенту присылать чужой user_id.
-- Валидация уникальности (email, номер договора) — проверяйте через DB и возвращайте понятные ошибки.
+## Sfaturi de securitate și validare
 
-## Что можно улучшить / next steps
+- Parolele se stochează doar ca hash (bcrypt).
+- Verificați ownership-ul: client.UserID trebuie completat pe server (din token), nu permiteți clientului să trimită user_id străin.
+- Validați unicitatea (email, număr contract) — verificați în DB și returnați erori clare.
 
-- Добавить Postman collection с примером логина и CRUD для клиентов/договоров.
-- Добавить unit/integration тесты для сервисного слоя и handlers (httptest + gin).
-- Перевести миграции на инструмент (golang-migrate) для управляемых миграций.
-- Добавить логирование запросов и ошибок (structured logging).
 
-## Контакты в коде
+## Ce se poate îmbunătăți / next steps
 
-- API-обработчики: `internal/api/handlers.go` (+ дополнительные файлы в `internal/api/`).
-- Бизнес-логика: `internal/service/*`.
-- Репозитории/DB: `internal/repository/*`.
-- Модели: `internal/models/models.go`.
+- Adăugați o colecție Postman cu exemple de login și CRUD pentru clienți/contracte.
+- Adăugați teste unit/integration pentru stratul de servicii și handler-e (httptest + gin).
+- Migrați la un instrument de migrații (golang-migrate) pentru migrații controlate.
+- Adăugați logare structurată pentru request-uri și erori.
 
----
 
-Если хотите — могу:
-- добавить Postman collection и пример environment variables;
-- сделать `clients.go` с полным CRUD и примерами тестов;
-- подготовить пример миграции через `golang-migrate`.
+## Unde găsiți codul
+
+- Handler-e API: `internal/api/handlers.go` (+ fișiere suplimentare în `internal/api/`).
+- Logică de business: `internal/service/*`.
+- Repository/DB: `internal/repository/*`.
+- Modele: `internal/models/models.go`.

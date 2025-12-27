@@ -47,6 +47,7 @@ class _LoginPageState extends State<LoginPage> {
 
           // Перенаправление на меню
           if (context.mounted) {
+            // ignore: use_build_context_synchronously
             GoRouter.of(context).go('/0_1_menu');
           }
         } else {
