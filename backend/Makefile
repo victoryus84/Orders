@@ -30,12 +30,12 @@ ssl-test:
 	docker compose run --rm curlimages/curl curl -I "https://${DOMAIN}/health"
 
 # Сборка образов
-build:
+buildcertbot:
 	docker compose build certbot-init certbot-renew
 
 # Запуск всего стека (без certbot-init)
 up:
-	docker compose up -d postgres api nginx certbot
+	docker compose up -d
 
 # Остановка всего стека
 down:
@@ -46,10 +46,6 @@ restart: down up
 
 # Очистка
 # ВНИМАНИЕ: команда удаляет named volumes, что может привести к потере данных!
-clean:
-	docker compose down --remove-orphans -v
-	docker system prune -f
-# Очистка
 clean:
 	docker compose down --remove-orphans -v
 	docker system prune -f

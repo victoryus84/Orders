@@ -90,9 +90,10 @@ type Order struct {
 // ********** OrderItem - Poziție comandă **********
 type OrderItem struct {
     gorm.Model
-    OrderID   uint    `gorm:"not null"`                    // ID-ul comenzii
-    ProductID uint    `gorm:"not null"`                    // ID-ul produsului
-    Quantity  int     `gorm:"not null"`                    // Cantitatea
-    Price     float64 `gorm:"type:decimal(10,2);not null"` // Prețul unitar la momentul comenzii
+    OrderID   uint    `gorm:"not null"`                             // ID-ul comenzii
+    ProductID uint    `gorm:"not null"`                             // ID-ul produsului
+    Product   Product `gorm:"foreignKey:ProductID;references:ID"`   // Produsul asociat poziției
+    Quantity  int     `gorm:"not null"`                             // Cantitatea
+    Price     float64 `gorm:"type:decimal(10,2);not null"`          // Prețul unitar la momentul comenzii
 }
 // ****************************************************

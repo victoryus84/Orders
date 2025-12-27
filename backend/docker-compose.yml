@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:16-alpine
+    ports:
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -19,6 +21,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+        - "127.0.0.1:8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,14 +50,14 @@ services:
     networks:
       - app-network
     restart: unless-stopped
-
+    profiles: ["prod"]
   certbot:
     image: certbot/certbot
     volumes:
       - ./nginx/certbot/conf:/etc/letsencrypt
       - ./nginx/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"  
-
+    profiles: ["prod"]
 networks:
   app-network:
     driver: bridge
