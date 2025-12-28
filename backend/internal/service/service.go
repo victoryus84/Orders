@@ -26,8 +26,10 @@ type Repository interface {
 
 	// Client methods
 	CreateClient(client *models.Client) error
+	GetFirst1000Clients() ([]models.Client, error)
+	FindClientsByQuery(query string) ([]models.Client, error)
 	FindClientByID(id uint) (*models.Client, error)
-
+	
 	// Contract methods
 	CreateContract(contract *models.Contract) error
 	FindContractByID(id uint) (*models.Contract, error)
@@ -106,14 +108,23 @@ func (service *Service) FindOrdersByUserID(userID uint) ([]models.Order, error) 
 	return service.repository.FindOrdersByUserID(userID)
 }
 
+// Clients methods
 func (service *Service) CreateClient(client *models.Client) error {
 	return service.repository.CreateClient(client)
+}
+func (service *Service) GetFirst1000Clients() ([]models.Client, error) {
+	return service.repository.GetFirst1000Clients()
+}
+
+func (service *Service) FindClientsByQuery(query string) ([]models.Client, error) {
+	return service.repository.FindClientsByQuery(query)
 }
 
 func (service *Service) FindClientByID(id uint) (*models.Client, error) {
 	return service.repository.FindClientByID(id)
 }
 
+// Contract methods
 func (service *Service) CreateContract(contract *models.Contract) error {
 	return service.repository.CreateContract(contract)
 }
@@ -122,6 +133,7 @@ func (service *Service) FindContractByID(id uint) (*models.Contract, error) {
 	return service.repository.FindContractByID(id)
 }
 
+// ContractAddress methods
 func (service *Service) CreateContractAddress(addr *models.ContractAddress) error {
 	return service.repository.CreateContractAddress(addr)
 }
@@ -130,6 +142,7 @@ func (service *Service) FindContractAddressByID(id uint) (*models.ContractAddres
 	return service.repository.FindContractAddressByID(id)
 }
 
+// Product methods
 func (service *Service) CreateProduct(product *models.Product) error {
 	return service.repository.CreateProduct(product)
 }

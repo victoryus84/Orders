@@ -44,7 +44,26 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 }
 
 // Handler pentru obținerea clientului după id
-func GetClientHandler(s Service) gin.HandlerFunc {
+func GetClientsHandler(s Service) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        idStr := c.Param("id")
+        id, err := strconv.ParseUint(idStr, 10, 64)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+            return
+        }
+
+        client, err := s.FindClientByID(uint(id))
+        if err != nil {
+            c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+            return
+        }
+
+        c.JSON(http.StatusOK, client)
+    }
+}
+// Handler pentru obținerea clientului după id
+func GetClientByIDHandler(s Service) gin.HandlerFunc {
     return func(c *gin.Context) {
         idStr := c.Param("id")
         id, err := strconv.ParseUint(idStr, 10, 64)

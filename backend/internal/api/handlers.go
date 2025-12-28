@@ -74,8 +74,9 @@ func SetupRoutes(router *gin.Engine, service Service) {
 
 		// --- Clients ---
 		protected.POST("/clients", CreateClientHandler(service))
-		protected.GET("/clients/:id", GetClientHandler(service))
-		
+		protected.GET("/clients", GetClientsHandler(service))
+		protected.GET("/clients/:id", GetClientByIDHandler(service))
+
 		// --- Contracts ---
 		protected.POST("/contracts", func(context *gin.Context) {
 			var contract models.Contract
