@@ -43,6 +43,38 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
     }
 }
 
+// Handler pentru obținerea primilor 1000 de clienți
+func GetFirst1000Clients(s Service) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        clients, err := s.GetFirst1000Clients()
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
+        }
+
+        c.JSON(http.StatusOK, clients)
+    }
+}   
+
+// Handler pentru căutarea clienților după query
+func SearchClientsHandler(s Service) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        query := c.Query("q")
+        if query == "" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "query parameter 'q' is required"})
+            return
+        }
+
+        clients, err := s.FindClientsByQuery(query)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
+        }
+
+        c.JSON(http.StatusOK, clients)
+    }
+}
+
 // Handler pentru obținerea clientului după id
 func GetClientsHandler(s Service) gin.HandlerFunc {
     return func(c *gin.Context) {

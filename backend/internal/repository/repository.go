@@ -62,7 +62,7 @@ func (repository *Repository) GetFirst1000Clients() ([]models.Client, error) {
 // Găsește până la 5 clienți după un substring (minim 5 caractere)
 func (repository *Repository) FindClientsByQuery(query string) ([]models.Client, error) {
 	if len(query) < 3 {
-		return []models.Client{}, nil // Return empty if less than 5 chars
+		return []models.Client{}, nil // Return empty if less than 3 chars
 	}
 	var clients []models.Client
 	err := repository.db.
