@@ -10,15 +10,22 @@ import (
 type Service interface {
 	Signup(email, password, role string) error
 	Login(email, password string) (string, error)
+	
 	CreateOrder(userID uint, order *models.Order) error
 	FindOrdersByUserID(userID uint) ([]models.Order, error)
 	FindOrderByID(id uint) (*models.Order, error)
+	
 	CreateClient(client *models.Client) error
 	FindClientByID(id uint) (*models.Client, error)
+	
 	CreateContract(contract *models.Contract) error
+	GetFirst1000Clients() ([]models.Client, error)
+	FindClientsByQuery(query string) ([]models.Client, error)
 	FindContractByID(id uint) (*models.Contract, error)
+	
 	CreateContractAddress(addr *models.ContractAddress) error
 	FindContractAddressByID(id uint) (*models.ContractAddress, error)
+	
 	CreateProduct(product *models.Product) error
 	FindProductByID(id uint) (*models.Product, error)
 }
@@ -74,8 +81,10 @@ func SetupRoutes(router *gin.Engine, service Service) {
 
 		// --- Clients ---
 		protected.POST("/clients", CreateClientHandler(service))
-		protected.GET("/clients/:id", GetClientHandler(service))
-		
+		protected.GET("/clients", GetFirst1000Clients(service))
+		protected.GET("/clients/search", SearchClientsHandler(service))
+		protected.GET("/clients/:id", GetClientByIDHandler(service))
+
 		// --- Contracts ---
 		protected.POST("/contracts", func(context *gin.Context) {
 			var contract models.Contract

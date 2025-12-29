@@ -24,6 +24,7 @@ type Canal struct {
 type Client struct {
     gorm.Model
     Name      string     `gorm:"type:varchar(100);not null"`        // Numele clientului
+    FiscalID  string     `gorm:"type:varchar(15);unique;not null"`  // Codul fiscal al clientului (unic)
     Email     string     `gorm:"type:varchar(100);unique;not null"` // Email-ul clientului (unic)
     Phone     string     `gorm:"type:varchar(20)"`                  // Telefonul clientului
     Address   string     `gorm:"type:text"`                         // Adresa clientului

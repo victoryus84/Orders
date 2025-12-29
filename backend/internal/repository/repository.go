@@ -2,6 +2,7 @@ package repository
 
 import (
 	"orders/internal/models"
+
 	"gorm.io/gorm"
 )
 
@@ -49,6 +50,26 @@ func (repository *Repository) FindOrderByID(id uint) (*models.Order, error) {
 // Creează un nou client în baza de date
 func (repository *Repository) CreateClient(client *models.Client) error {
 	return repository.db.Create(client).Error
+}
+
+// Returnează primii 1000 de clienți din baza de date
+func (repository *Repository) GetFirst1000Clients() ([]models.Client, error) {
+	var clients []models.Client
+	err := repository.db.Limit(1000).Find(&clients).Error
+	return clients, err
+}
+
+// Găsește până la 5 clienți după un substring (minim 5 caractere)
+func (repository *Repository) FindClientsByQuery(query string) ([]models.Client, error) {
+	if len(query) < 3 {
+		return []models.Client{}, nil // Return empty if less than 3 chars
+	}
+	var clients []models.Client
+	err := repository.db.
+		Where("name ILIKE ? OR email ILIKE ?", "%"+query+"%", "%"+query+"%").
+		Limit(50).
+		Find(&clients).Error
+	return clients, err
 }
 
 // Găsește un client după ID
