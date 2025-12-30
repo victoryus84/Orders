@@ -4,3 +4,4 @@ DEVELOPMENT.md
 Dockerfile.dev
 compose-dev.yml
 .air.toml
+/tmp
