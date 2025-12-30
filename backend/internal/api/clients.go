@@ -25,15 +25,12 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
             return
         }
 
-        ownerID := c.GetUint("user_id")
-
         client := &models.Client{
             Name:     req.Name,
             FiscalID: req.FiscalID,
             Email:    req.Email,
             Phone:    req.Phone,
             Address:  req.Address,
-            OwnerID:  ownerID,
         }
 
         if err := s.CreateClient(client); err != nil {
