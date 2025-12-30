@@ -1,3 +1,6 @@
 .env
 /nginx
 DEVELOPMENT.md
+Dockerfile.dev
+compose-dev.yml
+.air.toml

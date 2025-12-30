@@ -71,7 +71,9 @@ func SetupRoutes(router *gin.Engine, service Service) {
 		context.JSON(http.StatusOK, gin.H{"token": token})
 	})
 
-	protected := router.Group("/").Use(authMiddleware())
+	 // API v1 routes with prefix
+    api := router.Group("/api/v1")
+	protected := api.Group("/").Use(authMiddleware())
 	{
 	
 		// --- Orders ---

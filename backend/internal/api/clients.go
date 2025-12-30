@@ -9,11 +9,12 @@ import (
 
 // Handler pentru crearea clientului
 type ClientCreateRequest struct {
-    Name    string `json:"name" binding:"required"`
-    Email   string `json:"email" binding:"required,email"`
-    Phone   string `json:"phone"`
-    Address string `json:"address"`
-    UserID  uint   `json:"user_id" binding:"required"`
+    Name     string `json:"name" binding:"required"`
+    FiscalID string `json:"fiscal_code"`
+    Email    string `json:"email" binding:"required,email"`
+    Phone    string `json:"phone"`
+    Address  string `json:"address"`
+    UserID   uint   `json:"user_id" binding:"required"`
 }
 
 func CreateClientHandler(s Service) gin.HandlerFunc {
@@ -27,11 +28,12 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
         ownerID := c.GetUint("user_id")
 
         client := &models.Client{
-            Name:    req.Name,
-            Email:   req.Email,
-            Phone:   req.Phone,
-            Address: req.Address,
-            OwnerID: ownerID,
+            Name:     req.Name,
+            FiscalID: req.FiscalID,
+            Email:    req.Email,
+            Phone:    req.Phone,
+            Address:  req.Address,
+            OwnerID:  ownerID,
         }
 
         if err := s.CreateClient(client); err != nil {
