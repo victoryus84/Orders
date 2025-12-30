@@ -28,8 +28,6 @@ type Client struct {
     Email     string     `gorm:"type:varchar(100);unique;not null"` // Email-ul clientului (unic)
     Phone     string     `gorm:"type:varchar(20)"`                  // Telefonul clientului
     Address   string     `gorm:"type:text"`                         // Adresa clientului
-    OwnerID   uint       `gorm:"not null"`                          // ID-ul ownerului (utilizatorului)
-    Owner     User       `gorm:"foreignKey:OwnerID;references:ID"`  // Ownerul clientului
     Contracts []Contract `gorm:"foreignKey:ClientID"`               // Contractele clientului
 }
 // ****************************************************
@@ -41,9 +39,9 @@ type Contract struct {
     Name      string            `gorm:"type:varchar(100);not null"`             // Numele contractului
     Date      string            `gorm:"type:date;not null"`                     // Data contractului
     Amount    float64           `gorm:"type:decimal(10,2);not null"`            // Suma contractului
-    Status    string            `gorm:"type:varchar(20);not null"`              // Statusul ("active", "closed" etc.)
-    Client    Client            `gorm:"foreignKey:ClientID;references:ID"`      // Clientul
+    Status    string            `gorm:"type:varchar(20);not null"`              // Statutul ("active", "closed" etc.)
     ClientID  uint              `gorm:"not null"`                               // Cheie externă către Client
+    Client    Client            `gorm:"foreignKey:ClientID;references:ID"`      // Clientul
     OwnerID   uint              `gorm:"not null"`                               // ID-ul ownerului (utilizatorului)
     Owner     User              `gorm:"foreignKey:OwnerID;references:ID"`       // Ownerul contractului
     Addresses []ContractAddress `gorm:"foreignKey:ContractID"`                  // Adresele asociate contractului
