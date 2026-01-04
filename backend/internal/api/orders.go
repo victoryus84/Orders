@@ -10,10 +10,10 @@ import (
 
 // Request pentru crearea comenzii (fără OwnerID, acesta vine din context)
 type OrderCreateRequest struct {
-	ClientID   uint    `json:"client_id"`
-	ContractID uint    `json:"contract_id"`
-	TotalPrice float64 `json:"total_price"`
-	Status     string  `json:"status"`
+	ClientID   uint    `json:"client_id" xml:"client_id" binding:"required"`
+	ContractID uint    `json:"contract_id" xml:"contract_id"`
+	TotalPrice float64 `json:"total_price" xml:"total_price" binding:"required"`
+	Status     string  `json:"status" xml:"status" binding:"required"`
 }
 
 // Handler pentru crearea comenzii (POST /orders)
