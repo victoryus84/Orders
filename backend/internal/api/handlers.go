@@ -4,28 +4,29 @@ import (
 	"net/http"
 	"orders/internal/models"
 	"strconv"
+
 	"github.com/gin-gonic/gin"
 )
 
 type Service interface {
 	Signup(email, password, role string) error
 	Login(email, password string) (string, error)
-	
+
 	CreateOrder(userID uint, order *models.Order) error
 	FindOrdersByUserID(userID uint) ([]models.Order, error)
 	FindOrderByID(id uint) (*models.Order, error)
-	
+
 	CreateClient(client *models.Client) error
 	FindClientByID(id uint) (*models.Client, error)
-	
+
 	CreateContract(contract *models.Contract) error
 	GetFirst1000Clients() ([]models.Client, error)
 	FindClientsByQuery(query string) ([]models.Client, error)
 	FindContractByID(id uint) (*models.Contract, error)
-	
+
 	CreateContractAddress(addr *models.ContractAddress) error
 	FindContractAddressByID(id uint) (*models.ContractAddress, error)
-	
+
 	CreateProduct(product *models.Product) error
 	FindProductByID(id uint) (*models.Product, error)
 }
@@ -33,9 +34,9 @@ type Service interface {
 func SetupRoutes(router *gin.Engine, service Service) {
 
 	// --- Health-check ---
-    router.GET("/health", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"status": "ok"})
-    })
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 	// --- Auth ---
 	router.POST("/signup", func(context *gin.Context) {
 		var req struct {
@@ -56,12 +57,14 @@ func SetupRoutes(router *gin.Engine, service Service) {
 
 	router.POST("/login", func(context *gin.Context) {
 		var req struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
+			Email    string `json:"email" xml:"email"`
+			Password string `json:"password" xml:"password"`
 		}
 		if err := context.ShouldBindJSON(&req); err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+			if err := context.ShouldBindXML(&req); err != nil {
+				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
 		}
 		token, err := service.Login(req.Email, req.Password)
 		if err != nil {
@@ -71,11 +74,11 @@ func SetupRoutes(router *gin.Engine, service Service) {
 		context.JSON(http.StatusOK, gin.H{"token": token})
 	})
 
-	 // API v1 routes with prefix
-    api := router.Group("/api/v1")
+	// API v1 routes with prefix
+	api := router.Group("/api/v1")
 	protected := api.Group("/").Use(authMiddleware())
 	{
-	
+
 		// --- Orders ---
 		protected.POST("/orders", CreateOrderHandler(service))
 		protected.GET("/orders", GetOrdersHandler(service))
