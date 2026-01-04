@@ -1,10 +1,16 @@
-.PHONY: up down restart ps build clean help
+.PHONY: up down restart build clean help
 
 # English: Include environment variables from .env
 # Română: Include variabilele de mediu din .env
 # Русский: Включает переменные окружения из .env
 include .env
 export
+
+# English: Build and start the entire stack
+# Română: Construiește și pornește întreaga stivă
+# Русский: Построить и запустить весь стек
+build:
+	docker compose -f compose-dev.yml up --build -d
 
 # English: Start the entire stack in detached mode
 # Română: Pornește întreaga stivă în mod detached
@@ -37,6 +43,7 @@ clean:
 # Русский: Показать справку
 help:
 	@echo "Commands / Comenzi / Команды:"
+	@echo "  make build   - Build and start stack / Construiește și pornește / Построить и запустить"
 	@echo "  make up      - Start stack / Pornește stiva / Запуск стека"
 	@echo "  make down    - Stop stack / Oprește stiva / Остановка стека"
 	@echo "  make restart - Restart stack / Repornește stiva / Перезагрузка"
