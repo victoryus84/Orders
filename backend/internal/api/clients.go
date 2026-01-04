@@ -21,10 +21,18 @@ type ClientCreateRequest struct {
 func CreateClientHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req ClientCreateRequest
-		// Handle both JSON and XML
-		if err := c.ShouldBindJSON(&req); err != nil {
+		contentType := c.ContentType()
+
+		// Handle both JSON and XML based on Content-Type header
+		if contentType == "application/xml" || contentType == "text/xml" {
 			if err := c.ShouldBindXML(&req); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid XML: " + err.Error()})
+				return
+			}
+		} else {
+			// Default to JSON
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
 				return
 			}
 		}
@@ -138,9 +146,18 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 		}
 
 		var req ContractCreateRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		contentType := c.ContentType()
+
+		// Handle both JSON and XML based on Content-Type header
+		if contentType == "application/xml" || contentType == "text/xml" {
 			if err := c.ShouldBindXML(&req); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid XML: " + err.Error()})
+				return
+			}
+		} else {
+			// Default to JSON
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
 				return
 			}
 		}
