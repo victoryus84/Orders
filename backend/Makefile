@@ -10,7 +10,7 @@ export
 # Română: Construiește și pornește întreaga stivă
 # Русский: Построить и запустить весь стек
 build:
-	docker compose -f compose-dev.yml up --build -d
+	docker compose -f compose-prod.yml up --build -d
 
 # English: Start the entire stack in detached mode
 # Română: Pornește întreaga stivă în mod detached
