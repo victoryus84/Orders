@@ -20,38 +20,65 @@ type ClientCreateRequest struct {
 
 func CreateClientHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req ClientCreateRequest
 		contentType := c.ContentType()
+		var requests []ClientCreateRequest
 
-		// Handle both JSON and XML based on Content-Type header
 		if contentType == "application/xml" || contentType == "text/xml" {
-			if err := c.ShouldBindXML(&req); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid XML: " + err.Error()})
-				return
+			// Try to bind a wrapper <clients><client>...</client></clients>
+			var wrapper struct {
+				Clients []ClientCreateRequest `xml:"client" binding:"required"`
+			}
+			if err := c.ShouldBindXML(&wrapper); err == nil && len(wrapper.Clients) > 0 {
+				requests = wrapper.Clients
+			} else {
+				// Fallback to single <client>...</client>
+				var single ClientCreateRequest
+				if err := c.ShouldBindXML(&single); err != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid XML: " + err.Error()})
+					return
+				}
+				requests = append(requests, single)
 			}
 		} else {
-			// Default to JSON
-			if err := c.ShouldBindJSON(&req); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
-				return
+			// JSON: try array, then wrapper {"clients": [...]}, then single object
+			var arr []ClientCreateRequest
+			if err := c.ShouldBindJSON(&arr); err == nil && len(arr) > 0 {
+				requests = arr
+			} else {
+				var wrapper struct {
+					Clients []ClientCreateRequest `json:"clients" binding:"required"`
+				}
+				if err := c.ShouldBindJSON(&wrapper); err == nil && len(wrapper.Clients) > 0 {
+					requests = wrapper.Clients
+				} else {
+					var single ClientCreateRequest
+					if err := c.ShouldBindJSON(&single); err != nil {
+						c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
+						return
+					}
+					requests = append(requests, single)
+				}
 			}
 		}
 
-		client := &models.Client{
-			ClientTypeID: req.ClientTypeID,
-			Name:         req.Name,
-			FiscalID:     req.FiscalID,
-			Email:        req.Email,
-			Phone:        req.Phone,
-			Address:      req.Address,
+		created := make([]*models.Client, 0, len(requests))
+		for _, req := range requests {
+			client := &models.Client{
+				ClientTypeID: req.ClientTypeID,
+				Name:         req.Name,
+				FiscalID:     req.FiscalID,
+				Email:        req.Email,
+				Phone:        req.Phone,
+				Address:      req.Address,
+			}
+			if err := s.CreateClient(client); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			created = append(created, client)
 		}
 
-		if err := s.CreateClient(client); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusCreated, client)
+		c.JSON(http.StatusCreated, created)
 	}
 }
 
