@@ -1,7 +1,10 @@
 package api
 
 import (
+	"bytes"
+	"encoding/json"
 	"encoding/xml"
+	"io"
 	"net/http"
 	"orders/internal/models"
 	"strconv"
@@ -25,38 +28,43 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 		contentType := c.ContentType()
 		var requests []ClientCreateRequest
 
+		// Read raw body so we can parse deterministically and return helpful errors
+		data, _ := c.GetRawData()
+		// Restore body for potential downstream handlers
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(data))
+
 		if contentType == "application/xml" || contentType == "text/xml" {
-			// Try to bind a wrapper <clients><client>...</client></clients>
+			// Try to unmarshal wrapper <clients><client>...</client></clients>
 			var wrapper struct {
 				XMLName xml.Name              `xml:"clients"`
-				Clients []ClientCreateRequest `xml:"client" binding:"required"`
+				Clients []ClientCreateRequest `xml:"client"`
 			}
-			if err := c.ShouldBindXML(&wrapper); err == nil && len(wrapper.Clients) > 0 {
+			if err := xml.Unmarshal(data, &wrapper); err == nil && len(wrapper.Clients) > 0 {
 				requests = wrapper.Clients
 			} else {
 				// Fallback to single <client>...</client>
 				var single ClientCreateRequest
-				if err := c.ShouldBindXML(&single); err != nil {
-					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid XML: " + err.Error()})
+				if err := xml.Unmarshal(data, &single); err != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid XML: " + err.Error(), "body": string(data)})
 					return
 				}
 				requests = append(requests, single)
 			}
 		} else {
-			// JSON: try array, then wrapper {"clients": [...]}, then single object
+			// JSON: try array, wrapper {"clients": [...]}, then single object
 			var arr []ClientCreateRequest
-			if err := c.ShouldBindJSON(&arr); err == nil && len(arr) > 0 {
+			if err := json.Unmarshal(data, &arr); err == nil && len(arr) > 0 {
 				requests = arr
 			} else {
 				var wrapper struct {
-					Clients []ClientCreateRequest `json:"clients" binding:"required"`
+					Clients []ClientCreateRequest `json:"clients"`
 				}
-				if err := c.ShouldBindJSON(&wrapper); err == nil && len(wrapper.Clients) > 0 {
+				if err := json.Unmarshal(data, &wrapper); err == nil && len(wrapper.Clients) > 0 {
 					requests = wrapper.Clients
 				} else {
 					var single ClientCreateRequest
-					if err := c.ShouldBindJSON(&single); err != nil {
-						c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
+					if err := json.Unmarshal(data, &single); err != nil {
+						c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error(), "body": string(data)})
 						return
 					}
 					requests = append(requests, single)
