@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"orders/internal/models"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,6 +75,15 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 
 		created := make([]*models.Client, 0, len(requests))
 		for _, req := range requests {
+			// Sanitize placeholder emails so validation won't reject requests like <email>not inserted</email>
+			em := strings.TrimSpace(req.Email)
+			if em != "" {
+				el := strings.ToLower(em)
+				if el == "not inserted" || el == "not_inserted" || el == "n/a" || el == "none" {
+					req.Email = ""
+				}
+			}
+
 			client := &models.Client{
 				ClientTypeID: req.ClientTypeID,
 				Name:         req.Name,
