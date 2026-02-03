@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/xml"
 	"net/http"
 	"orders/internal/models"
 	"strconv"
@@ -13,9 +14,10 @@ type ClientCreateRequest struct {
 	ClientTypeID uint   `json:"client_type" xml:"client_type" binding:"required"`
 	Name         string `json:"name" xml:"name" binding:"required"`
 	FiscalID     string `json:"fiscal_code" xml:"fiscal_code" binding:"required"`
-	Email        string `json:"email" xml:"email" binding:"required,email"`
-	Phone        string `json:"phone" xml:"phone"`
-	Address      string `json:"address" xml:"address"`
+	// Email is optional for now; accept empty or placeholder values until the DB holds actual emails
+	Email   string `json:"email" xml:"email" binding:"omitempty"`
+	Phone   string `json:"phone" xml:"phone"`
+	Address string `json:"address" xml:"address"`
 }
 
 func CreateClientHandler(s Service) gin.HandlerFunc {
@@ -26,6 +28,7 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 		if contentType == "application/xml" || contentType == "text/xml" {
 			// Try to bind a wrapper <clients><client>...</client></clients>
 			var wrapper struct {
+				XMLName xml.Name              `xml:"clients"`
 				Clients []ClientCreateRequest `xml:"client" binding:"required"`
 			}
 			if err := c.ShouldBindXML(&wrapper); err == nil && len(wrapper.Clients) > 0 {
