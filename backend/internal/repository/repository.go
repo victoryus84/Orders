@@ -2,6 +2,7 @@ package repository
 
 import (
 	"orders/internal/models"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -49,6 +50,10 @@ func (repository *Repository) FindOrderByID(id uint) (*models.Order, error) {
 
 // Creează un nou client în baza de date
 func (repository *Repository) CreateClient(client *models.Client) error {
+	// If email is empty or contains a placeholder value, omit it from INSERT so DBs without the column won't fail
+	if strings.TrimSpace(client.Email) == "" || strings.ToLower(strings.TrimSpace(client.Email)) == "not inserted" {
+		return repository.db.Omit("Email").Create(client).Error
+	}
 	return repository.db.Create(client).Error
 }
 
