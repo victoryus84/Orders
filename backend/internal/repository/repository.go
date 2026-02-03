@@ -74,7 +74,7 @@ func (repository *Repository) CreateClient(client *models.Client) error {
 // Returnează primii 1000 de clienți din baza de date
 func (repository *Repository) GetFirst1000Clients() ([]models.Client, error) {
 	var clients []models.Client
-	err := repository.db.Limit(1000).Find(&clients).Error
+	err := repository.db.Preload("ClientType").Limit(1000).Find(&clients).Error
 	return clients, err
 }
 
@@ -94,7 +94,14 @@ func (repository *Repository) FindClientsByQuery(query string) ([]models.Client,
 // Găsește un client după ID
 func (repository *Repository) FindClientByID(id uint) (*models.Client, error) {
 	var client models.Client
-	err := repository.db.First(&client, id).Error
+	err := repository.db.Preload("ClientType").First(&client, id).Error
+	return &client, err
+}
+
+// Găsește un client după fiscal_id (cod fiscal)
+func (repository *Repository) FindClientByFiscalID(fiscalID string) (*models.Client, error) {
+	var client models.Client
+	err := repository.db.Where("fiscal_id = ?", fiscalID).First(&client).Error
 	return &client, err
 }
 

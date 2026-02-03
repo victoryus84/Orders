@@ -29,7 +29,8 @@ type Repository interface {
 	GetFirst1000Clients() ([]models.Client, error)
 	FindClientsByQuery(query string) ([]models.Client, error)
 	FindClientByID(id uint) (*models.Client, error)
-	
+	FindClientByFiscalID(fiscalID string) (*models.Client, error)
+
 	// Contract methods
 	CreateContract(contract *models.Contract) error
 	FindContractByID(id uint) (*models.Contract, error)
@@ -122,6 +123,10 @@ func (service *Service) FindClientsByQuery(query string) ([]models.Client, error
 
 func (service *Service) FindClientByID(id uint) (*models.Client, error) {
 	return service.repository.FindClientByID(id)
+}
+
+func (service *Service) FindClientByFiscalID(fiscalID string) (*models.Client, error) {
+	return service.repository.FindClientByFiscalID(fiscalID)
 }
 
 // Contract methods

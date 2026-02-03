@@ -18,6 +18,7 @@ type Service interface {
 
 	CreateClient(client *models.Client) error
 	FindClientByID(id uint) (*models.Client, error)
+	FindClientByFiscalID(fiscalID string) (*models.Client, error)
 
 	CreateContract(contract *models.Contract) error
 	GetFirst1000Clients() ([]models.Client, error)

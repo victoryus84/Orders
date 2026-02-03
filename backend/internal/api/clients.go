@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"io"
 	"net/http"
 	"orders/internal/models"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // Handler pentru crearea clientului
@@ -73,9 +75,28 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 			}
 		}
 
-		created := make([]*models.Client, 0, len(requests))
+		created := make([]*models.Client, 0)
+		skipped := make([]map[string]string, 0)
+
 		for _, req := range requests {
-			// Sanitize placeholder emails so validation won't reject requests like <email>not inserted</email>
+			// Basic validation (these fields are required)
+			if req.ClientTypeID == 0 || strings.TrimSpace(req.Name) == "" || strings.TrimSpace(req.FiscalID) == "" {
+				skipped = append(skipped, map[string]string{"fiscal_code": req.FiscalID, "reason": "missing_required_fields"})
+				continue
+			}
+
+			// Check duplicate by fiscal id
+			existing, err := s.FindClientByFiscalID(req.FiscalID)
+			if err == nil && existing != nil {
+				skipped = append(skipped, map[string]string{"fiscal_code": req.FiscalID, "reason": "duplicate"})
+				continue
+			}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			// Sanitize placeholder emails
 			em := strings.TrimSpace(req.Email)
 			if em != "" {
 				el := strings.ToLower(em)
@@ -92,14 +113,15 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 				Phone:        req.Phone,
 				Address:      req.Address,
 			}
+
 			if err := s.CreateClient(client); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
+				skipped = append(skipped, map[string]string{"fiscal_code": req.FiscalID, "reason": err.Error()})
+				continue
 			}
 			created = append(created, client)
 		}
 
-		c.JSON(http.StatusCreated, created)
+		c.JSON(http.StatusCreated, gin.H{"created": created, "skipped": skipped})
 	}
 }
 
