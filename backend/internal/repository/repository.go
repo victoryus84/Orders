@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"orders/internal/models"
 	"strings"
-	"time"
+
+	"github.com/google/uuid"
 
 	"gorm.io/gorm"
 )
@@ -58,18 +59,16 @@ func (repository *Repository) CreateClient(client *models.Client) error {
 	if em == "" || el == "not inserted" || el == "not_inserted" || el == "n/a" || el == "none" {
 		// If the DB has an email column and it's NOT NULL, we must provide a non-null, unique value.
 		// Use a timestamp-based placeholder to avoid unique constraint collisions.
-		client.Email = fmt.Sprintf("placeholder_%d@local.invalid", time.Now().UnixNano())
+		client.Email = fmt.Sprintf("placeholder_%s@local.invalid", uuid.New().String())
 	}
 
-	if err := repository.db.Create(client).Error; err != nil {
-		// Fallback: if the DB does not have the email column, try omitting it
-		if strings.Contains(strings.ToLower(err.Error()), "column \"email\" does not exist") ||
-			strings.Contains(strings.ToLower(err.Error()), "unknown column 'email'") {
-			return repository.db.Omit("Email").Create(client).Error
-		}
-		return err
+	// Check if email column exists
+	if !repository.db.Migrator().HasColumn(client, "Email") {
+		return repository.db.Omit("Email").Create(client).Error
 	}
-	return nil
+
+	return repository.db.Create(client).Error
+
 }
 
 // Returnează primii 1000 de clienți din baza de date
