@@ -63,7 +63,8 @@ func (repository *Repository) CreateClient(client *models.Client) error {
 
 	if err := repository.db.Create(client).Error; err != nil {
 		// Fallback: if the DB does not have the email column, try omitting it
-		if strings.Contains(strings.ToLower(err.Error()), "column \"email\" does not exist") || strings.Contains(strings.ToLower(err.Error()), "unknown column 'email'") {
+		if strings.Contains(strings.ToLower(err.Error()), "column \"email\" does not exist") ||
+			strings.Contains(strings.ToLower(err.Error()), "unknown column 'email'") {
 			return repository.db.Omit("Email").Create(client).Error
 		}
 		return err
