@@ -1,15 +1,38 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+// UUIDModel provides a UUID field and a shared BeforeCreate hook.
+type UUIDModel struct {
+	UUID string `gorm:"type:uuid;uniqueIndex;default null"`
+}
+
+func (m *UUIDModel) BeforeCreate(tx *gorm.DB) (err error) {
+	if m.UUID == "" {
+		m.UUID = uuid.New().String()
+	}
+	return
+}
+
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+	if u.ID == 1 {
+		tx.Model(u).Update("role", "admin")
+	}
+	return
+}
 
 // ********** User - Utilizatorul sistemului **********
 type User struct {
 	gorm.Model
-	Email    string `gorm:"unique;not null"` // Email-ul utilizatorului (unic)
-	Password string `gorm:"not null"`        // Hash-ul parolei (nu se afișează în JSON)
-	Role     string // Rolul utilizatorului ("admin", "user" etc.)
-	CanalID  *uint  // Cheie externă către canalul de vânzări
-	Canal    *Canal `gorm:"foreignKey:CanalID"` // Canalul de vânzări al utilizatorului
+	UUIDModel `gorm:"embedded"`
+	Email     string `gorm:"unique;not null"` // Email-ul utilizatorului (unic)
+	Password  string `gorm:"not null"`        // Hash-ul parolei (nu se afișează în JSON)
+	Role      string // Rolul utilizatorului ("admin", "user" etc.)
+	CanalID   *uint  // Cheie externă către canalul de vânzări
+	Canal     *Canal `gorm:"foreignKey:CanalID"` // Canalul de vânzări al utilizatorului
 }
 
 // ****************************************************
@@ -17,7 +40,8 @@ type User struct {
 // ********** Canal - Canal de vânzări **********
 type Canal struct {
 	gorm.Model
-	Name string `gorm:"type:varchar(100);not null"` // Numele canalului
+	UUIDModel `gorm:"embedded"`
+	Name      string `gorm:"type:varchar(100);not null"` // Numele canalului
 }
 
 // ****************************************************
@@ -25,7 +49,8 @@ type Canal struct {
 // ********** Client - Client (beneficiar) **********
 type ClientType struct {
 	gorm.Model
-	Name string `gorm:"type:varchar(20);not null"` // Tipul clientului ("individual", "company", etc.)
+	UUIDModel `gorm:"embedded"`
+	Name      string `gorm:"type:varchar(20);not null"` // Tipul clientului ("individual", "company", etc.)
 }
 
 // ****************************************************
@@ -33,6 +58,7 @@ type ClientType struct {
 // ********** Client - Client (beneficiar) **********
 type Client struct {
 	gorm.Model
+	UUIDModel    `gorm:"embedded"`
 	ClientTypeID uint       `gorm:"not null"`                          // Foreign key to ClientType
 	ClientType   ClientType `gorm:"foreignKey:ClientTypeID;not null"`  // Tipul clientului ("individual", "company", etc.)
 	Name         string     `gorm:"type:varchar(100);not null"`        // Numele clientului
@@ -48,6 +74,7 @@ type Client struct {
 // ********** Contract - Contract cu clientul **********
 type Contract struct {
 	gorm.Model
+	UUIDModel `gorm:"embedded"`
 	Number    string            `gorm:"type:varchar(50);not null;unique"`  // Numărul contractului
 	Name      string            `gorm:"type:varchar(100);not null"`        // Numele contractului
 	Date      string            `gorm:"type:date;not null"`                // Data contractului
@@ -65,6 +92,7 @@ type Contract struct {
 // ********** ContractAddress - Adresă asociată contractului **********
 type ContractAddress struct {
 	gorm.Model
+	UUIDModel  `gorm:"embedded"`
 	ContractID uint     `gorm:"not null"`                            // Cheie externă către Contract
 	Address    string   `gorm:"type:text;not null"`                  // Adresa
 	Type       string   `gorm:"type:varchar(50)"`                    // Tipul adresei ("billing", "shipping" etc.)
@@ -78,6 +106,7 @@ type ContractAddress struct {
 // ********** Product - Produs **********
 type Product struct {
 	gorm.Model
+	UUIDModel   `gorm:"embedded"`
 	Name        string  `gorm:"type:varchar(100);not null"`       // Numele produsului
 	Price       float64 `gorm:"type:decimal(10,2);not null"`      // Prețul produsului
 	Description string  `gorm:"type:text"`                        // Descrierea produsului
@@ -90,6 +119,7 @@ type Product struct {
 // ********** Order - Comandă **********
 type Order struct {
 	gorm.Model
+	UUIDModel  `gorm:"embedded"`
 	OwnerID    uint        `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
 	Owner      User        `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul comenzii
 	ClientID   uint        `gorm:"not null"`                            // ID-ul clientului (cheie externă)
@@ -106,6 +136,7 @@ type Order struct {
 // ********** OrderItem - Poziție comandă **********
 type OrderItem struct {
 	gorm.Model
+	UUIDModel `gorm:"embedded"`
 	OrderID   uint    `gorm:"not null"`                           // ID-ul comenzii
 	ProductID uint    `gorm:"not null"`                           // ID-ul produsului
 	Product   Product `gorm:"foreignKey:ProductID;references:ID"` // Produsul asociat poziției

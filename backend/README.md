@@ -70,7 +70,7 @@ curl -X POST http://localhost:8080/login \
 Creează client (înlocuiți `<token>`):
 
 ```bash
-curl -X POST http://localhost:8080/clients \
+curl -X POST http://localhost:8080/api/v1/clients \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{"name":"ACME","email":"acme@example.com","phone":"123","address":"addr"}'
@@ -79,7 +79,7 @@ curl -X POST http://localhost:8080/clients \
 Creează contract pentru clientul id=1:
 
 ```bash
-curl -X POST http://localhost:8080/clients/1/contracts \
+curl -X POST http://localhost:8080/api/v1/clients/1/contracts \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{"number":"CTR-001","date":"2025-11-01","amount":1000.00,"status":"active"}'
