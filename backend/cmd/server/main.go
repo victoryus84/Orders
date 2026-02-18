@@ -37,6 +37,9 @@ func main() {
 		&models.Contract{},
 		&models.ContractAddress{},
 		&models.Product{},
+		&models.VatTax{},
+		&models.IncomeTax{},
+		&models.Unit{},
 		&models.Order{},
 		&models.OrderItem{},
 	)
