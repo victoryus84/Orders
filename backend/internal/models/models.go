@@ -24,6 +24,7 @@ func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 	return
 }
 
+// Directories
 // ********** User - Utilizatorul sistemului **********
 type User struct {
 	gorm.Model
@@ -116,6 +117,36 @@ type Product struct {
 
 // ****************************************************
 
+// ********** VatRate - TVA **********
+type VatTax struct {
+	gorm.Model
+	UUIDModel   `gorm:"embedded"`
+	Name        string  `gorm:"type:varchar(100);not null"`  // Numele taxei
+	Rate        float32 `gorm:"type:decimal(10,2);not null"` // Rata taxei
+	Description string  `gorm:"type:text"`                   // Descrierea taxei
+}
+
+// ****************************************************
+
+// ********** Product - Produs **********
+type IncomeTax struct {
+	gorm.Model
+	UUIDModel   `gorm:"embedded"`
+	Name        string  `gorm:"type:varchar(100);not null"`  // Numele taxei
+	Rate        float32 `gorm:"type:decimal(10,2);not null"` // Rata taxei
+	Description string  `gorm:"type:text"`                   // Descrierea taxei
+}
+
+// ****************************************************
+
+// ********** Units of Measurement **********
+type Unit struct {
+	gorm.Model
+	UUIDModel `gorm:"embedded"`
+	Name      string `gorm:"type:varchar(50);not null"` // Numele unității de măsură (ex: "buc", "kg")
+}
+
+// Documents - Documente
 // ********** Order - Comandă **********
 type Order struct {
 	gorm.Model
