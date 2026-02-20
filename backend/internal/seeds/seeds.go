@@ -75,12 +75,12 @@ func SeedIncomeTaxes(db *gorm.DB) error {
 
 func SeedUnits(db *gorm.DB) error {
 	units := []models.Unit{
-		{Name: "buc"}, // bucăți
-		{Name: "kg"},  // kilograme
-		{Name: "m"},   // metri
-		{Name: "l"},   // litri
-		{Name: "set"}, // seturi
-		{Name: "pet"}, // plastic
+		{Name: "buc", Description: "bucăți"},
+		{Name: "kg", Description: "kilograme"},
+		{Name: "m", Description: "metri"},
+		{Name: "l", Description: "litri"},
+		{Name: "set", Description: "seturi"},
+		{Name: "pet", Description: "plastic"},
 	}
 
 	for _, unit := range units {
