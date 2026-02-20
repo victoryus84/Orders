@@ -140,3 +140,15 @@ func (repository *Repository) FindProductByID(id uint) (*models.Product, error) 
 	err := repository.db.First(&product, id).Error
 	return &product, err
 }
+
+func (repository *Repository) FindVatTaxByID(id uint) (*models.VatTax, error) {
+	var vatTax models.VatTax
+	err := repository.db.First(&vatTax, id).Error
+	return &vatTax, err
+}
+
+func (repository *Repository) FindUnitByID(id uint) (*models.Unit, error) {
+	var unit models.Unit
+	err := repository.db.First(&unit, id).Error
+	return &unit, err
+}

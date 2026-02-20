@@ -23,6 +23,8 @@ type Repository interface {
 
 	// Product methods
 	FindProductByID(id uint) (*models.Product, error)
+	FindVatTaxByID(id uint) (*models.VatTax, error)
+	FindUnitByID(id uint) (*models.Unit, error)
 
 	// Client methods
 	CreateClient(client *models.Client) error
@@ -154,4 +156,12 @@ func (service *Service) CreateProduct(product *models.Product) error {
 
 func (service *Service) FindProductByID(id uint) (*models.Product, error) {
 	return service.repository.FindProductByID(id)
+}
+
+func (service *Service) FindVatTaxByID(id uint) (*models.VatTax, error) {
+	return service.repository.FindVatTaxByID(id)
+}
+
+func (service *Service) FindUnitByID(id uint) (*models.Unit, error) {
+	return service.repository.FindUnitByID(id)
 }

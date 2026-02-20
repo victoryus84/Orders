@@ -30,6 +30,8 @@ type Service interface {
 
 	CreateProduct(product *models.Product) error
 	FindProductByID(id uint) (*models.Product, error)
+	FindVatTaxByID(id uint) (*models.VatTax, error)
+	FindUnitByID(id uint) (*models.Unit, error)
 }
 
 func SetupRoutes(router *gin.Engine, service Service) {
