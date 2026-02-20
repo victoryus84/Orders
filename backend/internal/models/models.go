@@ -141,12 +141,38 @@ type IncomeTax struct {
 
 // ****************************************************
 
-// ********** Units of Measurement **********
+// ********** Units of Measurement - Unitati de măsură **********
 type Unit struct {
 	gorm.Model
-	UUIDModel `gorm:"embedded"`
-	Name      string `gorm:"type:varchar(50);not null"` // Numele unității de măsură (ex: "buc", "kg")
+	UUIDModel   `gorm:"embedded"`
+	Name        string `gorm:"type:varchar(50);not null"` // Numele unității de măsură (ex: "buc", "kg")
+	Description string `gorm:"type:text"`                 // Descrierea unității de măsură
 }
+
+// ****************************************************
+
+// ********** Price type of products - Tipuri de pret **********
+type PriceType struct {
+	gorm.Model
+	UUIDModel   `gorm:"embedded"`
+	Name        string `gorm:"type:varchar(50);not null"` // Numele tipului de preț (ex: "Cu amamuntul", "En-gros")
+	Description string `gorm:"type:text"`                 // Descrierea tipiului de preț
+}
+
+// ****************************************************
+
+// ********** Price of products - Preturi producte **********
+type PriceProduct struct {
+	gorm.Model
+	UUIDModel   `gorm:"embedded"`
+	ProductID   uint      `gorm:"not null"`                             // Cheie externă către Product
+	Product     Product   `gorm:"foreignKey:ProductID;references:ID"`   // Produsul
+	PriceTypeID uint      `gorm:"not null"`                             // Cheie externă către PriceType
+	PriceType   PriceType `gorm:"foreignKey:PriceTypeID;references:ID"` // Tipul de preț
+	Price       float64   `gorm:"type:decimal(10,2);not null"`          // Prețul pentru acest tip
+}
+
+// ****************************************************
 
 // Documents - Documente
 // ********** Order - Comandă **********
