@@ -48,11 +48,20 @@ func SeedVatTaxes(db *gorm.DB) error {
 	}
 
 	for _, vatTax := range vatTaxes {
-		if err := db.Create(&vatTax).Error; err != nil {
-			log.Printf("❌ Failed to seed VatTax '%s': %v\n", vatTax.Name, err)
+		// Check if it already exists
+		var existing models.VatTax
+		if err := db.Where("name = ?", vatTax.Name).First(&existing).Error; err == gorm.ErrRecordNotFound {
+			// Insert if not found
+			if err := db.Create(&vatTax).Error; err != nil {
+				log.Printf("❌ Failed to seed VatTax '%s': %v\n", vatTax.Name, err)
+				return err
+			}
+			log.Printf("✅ Seeded VatTax: %s\n", vatTax.Name)
+		} else if err != nil {
 			return err
+		} else {
+			log.Printf("⏭️ VatTax '%s' already exists\n", vatTax.Name)
 		}
-		log.Printf("✅ Seeded VatTax: %s\n", vatTax.Name)
 	}
 	return nil
 }
@@ -64,11 +73,20 @@ func SeedIncomeTaxes(db *gorm.DB) error {
 	}
 
 	for _, incomeTax := range incomeTaxes {
-		if err := db.Create(&incomeTax).Error; err != nil {
-			log.Printf("❌ Failed to seed IncomeTax '%s': %v\n", incomeTax.Name, err)
+		// Check if it already exists
+		var existing models.IncomeTax
+		if err := db.Where("name = ?", incomeTax.Name).First(&existing).Error; err == gorm.ErrRecordNotFound {
+			// Insert if not found
+			if err := db.Create(&incomeTax).Error; err != nil {
+				log.Printf("❌ Failed to seed IncomeTax '%s': %v\n", incomeTax.Name, err)
+				return err
+			}
+			log.Printf("✅ Seeded IncomeTax: %s\n", incomeTax.Name)
+		} else if err != nil {
 			return err
+		} else {
+			log.Printf("⏭️ IncomeTax '%s' already exists\n", incomeTax.Name)
 		}
-		log.Printf("✅ Seeded IncomeTax: %s\n", incomeTax.Name)
 	}
 	return nil
 }
@@ -84,11 +102,20 @@ func SeedUnits(db *gorm.DB) error {
 	}
 
 	for _, unit := range units {
-		if err := db.Create(&unit).Error; err != nil {
-			log.Printf("❌ Failed to seed Unit '%s': %v\n", unit.Name, err)
+		// Check if it already exists
+		var existing models.Unit
+		if err := db.Where("name = ?", unit.Name).First(&existing).Error; err == gorm.ErrRecordNotFound {
+			// Insert if not found
+			if err := db.Create(&unit).Error; err != nil {
+				log.Printf("❌ Failed to seed Unit '%s': %v\n", unit.Name, err)
+				return err
+			}
+			log.Printf("✅ Seeded Unit: %s\n", unit.Name)
+		} else if err != nil {
 			return err
+		} else {
+			log.Printf("⏭️ Unit '%s' already exists\n", unit.Name)
 		}
-		log.Printf("✅ Seeded Unit: %s\n", unit.Name)
 	}
 	return nil
 }
