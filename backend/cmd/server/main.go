@@ -4,10 +4,10 @@ import (
 	"log"
 	"orders/internal/api"
 	"orders/internal/config"
-	"orders/internal/models"
 	"orders/internal/repository"
 	"orders/internal/seeds"
 	"orders/internal/service"
+	"orders/internal/migrations"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -30,23 +30,10 @@ func main() {
 	log.Println("✅ Database connected")
 
 	// Migrate schema
-	err = db.AutoMigrate(
-		&models.ClientType{},
-		&models.User{},
-		&models.Client{},
-		&models.Contract{},
-		&models.ContractAddress{},
-		&models.Product{},
-		&models.VatTax{},
-		&models.IncomeTax{},
-		&models.Unit{},
-		&models.Order{},
-		&models.OrderItem{},
-	)
-	if err != nil {
+	if err := db.AutoMigrate(migrations.GetAllModels()...); err != nil {
 		log.Fatal("migration failed:", err)
 	}
-	log.Println("✅ Migration completed successfully")
+    log.Println("✅ Migration completed successfully")
 
 	// Seed initial data
 	// WaitGroup to manage goroutines
