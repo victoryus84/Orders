@@ -32,26 +32,7 @@ func (repository *Repository) FindUserByEmail(email string) (*models.User, error
 	return &user, err
 }
 
-// Creează o nouă comandă (Order) în baza de date
-func (repository *Repository) CreateOrder(order *models.Order) error {
-	return repository.db.Create(order).Error
-}
-
-// Găsește toate comenzile pentru un anumit utilizator (după user_id/owner_id)
-func (repository *Repository) FindOrdersByUserID(userID uint) ([]models.Order, error) {
-	var orders []models.Order
-	err := repository.db.Preload("OrderItems").Where("user_id = ?", userID).Find(&orders).Error
-	return orders, err
-}
-
-// Găsește o comandă după ID (cu OrderItems preload)
-func (repository *Repository) FindOrderByID(id uint) (*models.Order, error) {
-	var order models.Order
-	err := repository.db.Preload("OrderItems").First(&order, id).Error
-	return &order, err
-}
-
-// Creează un nou client în baza de date
+// Client methods
 func (repository *Repository) CreateClient(client *models.Client) error {
 	// Normalize email value
 	em := strings.TrimSpace(client.Email)
@@ -71,14 +52,12 @@ func (repository *Repository) CreateClient(client *models.Client) error {
 
 }
 
-// Returnează primii 1000 de clienți din baza de date
 func (repository *Repository) GetFirst1000Clients() ([]models.Client, error) {
 	var clients []models.Client
 	err := repository.db.Preload("ClientType").Limit(1000).Find(&clients).Error
 	return clients, err
 }
 
-// Găsește până la 5 clienți după un substring (minim 5 caractere)
 func (repository *Repository) FindClientsByQuery(query string) ([]models.Client, error) {
 	if len(query) < 3 {
 		return []models.Client{}, nil // Return empty if less than 3 chars
@@ -91,50 +70,50 @@ func (repository *Repository) FindClientsByQuery(query string) ([]models.Client,
 	return clients, err
 }
 
-// Găsește un client după ID
 func (repository *Repository) FindClientByID(id uint) (*models.Client, error) {
 	var client models.Client
 	err := repository.db.Preload("ClientType").First(&client, id).Error
 	return &client, err
 }
 
-// Găsește un client după fiscal_id (cod fiscal)
 func (repository *Repository) FindClientByFiscalID(fiscalID string) (*models.Client, error) {
 	var client models.Client
 	err := repository.db.Where("fiscal_id = ?", fiscalID).First(&client).Error
 	return &client, err
 }
 
-// Creează un nou contract în baza de date
+// Contract methods
 func (repository *Repository) CreateContract(contract *models.Contract) error {
 	return repository.db.Create(contract).Error
 }
 
-// Găsește un contract după ID
 func (repository *Repository) FindContractByID(id uint) (*models.Contract, error) {
 	var contract models.Contract
 	err := repository.db.First(&contract, id).Error
 	return &contract, err
 }
 
-// Creează o nouă adresă de contract în baza de date
 func (repository *Repository) CreateContractAddress(addr *models.ContractAddress) error {
 	return repository.db.Create(addr).Error
 }
 
-// Găsește o adresă de contract după ID
 func (repository *Repository) FindContractAddressByID(id uint) (*models.ContractAddress, error) {
 	var addr models.ContractAddress
 	err := repository.db.First(&addr, id).Error
 	return &addr, err
 }
 
-// Creează un nou produs în baza de date
+// Product methods
 func (repository *Repository) CreateProduct(product *models.Product) error {
 	return repository.db.Create(product).Error
 }
 
-// Găsește un produs după ID
+func (repository *Repository) FindProductGroupByID(id uint) (*models.ProductGroup, error) {
+	var group models.ProductGroup
+	err := repository.db.First(&group, id).Error
+	return &group, err
+}
+
 func (repository *Repository) FindProductByID(id uint) (*models.Product, error) {
 	var product models.Product
 	err := repository.db.First(&product, id).Error
@@ -151,4 +130,21 @@ func (repository *Repository) FindUnitByID(id uint) (*models.Unit, error) {
 	var unit models.Unit
 	err := repository.db.First(&unit, id).Error
 	return &unit, err
+}
+
+// Order methods
+func (repository *Repository) CreateOrder(order *models.Order) error {
+	return repository.db.Create(order).Error
+}
+
+func (repository *Repository) FindOrdersByUserID(userID uint) ([]models.Order, error) {
+	var orders []models.Order
+	err := repository.db.Preload("OrderItems").Where("user_id = ?", userID).Find(&orders).Error
+	return orders, err
+}
+
+func (repository *Repository) FindOrderByID(id uint) (*models.Order, error) {
+	var order models.Order
+	err := repository.db.Preload("OrderItems").First(&order, id).Error
+	return &order, err
 }

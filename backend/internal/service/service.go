@@ -12,19 +12,11 @@ import (
 )
 
 type Repository interface {
+
+	// Authentication methods
 	// User methods
 	CreateUser(user *models.User) error
 	FindUserByEmail(email string) (*models.User, error)
-
-	// Order methods
-	CreateOrder(order *models.Order) error
-	FindOrdersByUserID(userID uint) ([]models.Order, error)
-	FindOrderByID(id uint) (*models.Order, error)
-
-	// Product methods
-	FindProductByID(id uint) (*models.Product, error)
-	FindVatTaxByID(id uint) (*models.VatTax, error)
-	FindUnitByID(id uint) (*models.Unit, error)
 
 	// Client methods
 	CreateClient(client *models.Client) error
@@ -41,6 +33,16 @@ type Repository interface {
 
 	// Product methods
 	CreateProduct(product *models.Product) error
+	FindProductByID(id uint) (*models.Product, error)
+	FindProductGroupByID(id uint) (*models.ProductGroup, error)
+	FindVatTaxByID(id uint) (*models.VatTax, error)
+	FindUnitByID(id uint) (*models.Unit, error)
+
+	// Document methods
+	// Order methods
+	CreateOrder(order *models.Order) error
+	FindOrdersByUserID(userID uint) ([]models.Order, error)
+	FindOrderByID(id uint) (*models.Order, error)
 }
 
 type Service struct {
@@ -54,6 +56,7 @@ func NewService(repository Repository, jwtSecret string) *Service {
 	return &Service{repository: repository, jwtSecret: jwtSecret, cfg: &cfg}
 }
 
+// Authentication methods
 func (service *Service) Signup(email, password, role string) error {
 	if !service.cfg.Allowsignup {
 		return fmt.Errorf("user registration is disabled")
@@ -85,30 +88,6 @@ func (service *Service) Login(email, password string) (string, error) {
 		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
 	return token.SignedString([]byte(service.jwtSecret))
-}
-
-func (service *Service) CreateOrder(userID uint, order *models.Order) error {
-	total := 0.0
-	for i := range order.OrderItems {
-		product, err := service.repository.FindProductByID(order.OrderItems[i].ProductID)
-		if err != nil {
-			return err
-		}
-		order.OrderItems[i].Price = product.Price
-		total += product.Price * float64(order.OrderItems[i].Quantity)
-	}
-	order.OwnerID = userID
-	order.TotalPrice = total
-	order.Status = "pending"
-	return service.repository.CreateOrder(order)
-}
-
-func (service *Service) FindOrderByID(id uint) (*models.Order, error) {
-	return service.repository.FindOrderByID(id)
-}
-
-func (service *Service) FindOrdersByUserID(userID uint) ([]models.Order, error) {
-	return service.repository.FindOrdersByUserID(userID)
 }
 
 // Clients methods
@@ -154,6 +133,10 @@ func (service *Service) CreateProduct(product *models.Product) error {
 	return service.repository.CreateProduct(product)
 }
 
+func (service *Service) FindProductGroupByID(id uint) (*models.ProductGroup, error) {
+	return service.repository.FindProductGroupByID(id)
+}
+
 func (service *Service) FindProductByID(id uint) (*models.Product, error) {
 	return service.repository.FindProductByID(id)
 }
@@ -164,4 +147,29 @@ func (service *Service) FindVatTaxByID(id uint) (*models.VatTax, error) {
 
 func (service *Service) FindUnitByID(id uint) (*models.Unit, error) {
 	return service.repository.FindUnitByID(id)
+}
+
+// Order methods
+func (service *Service) CreateOrder(userID uint, order *models.Order) error {
+	total := 0.0
+	for i := range order.OrderItems {
+		product, err := service.repository.FindProductByID(order.OrderItems[i].ProductID)
+		if err != nil {
+			return err
+		}
+		order.OrderItems[i].Price = product.Price
+		total += product.Price * float64(order.OrderItems[i].Quantity)
+	}
+	order.OwnerID = userID
+	order.TotalPrice = total
+	order.Status = "pending"
+	return service.repository.CreateOrder(order)
+}
+
+func (service *Service) FindOrderByID(id uint) (*models.Order, error) {
+	return service.repository.FindOrderByID(id)
+}
+
+func (service *Service) FindOrdersByUserID(userID uint) ([]models.Order, error) {
+	return service.repository.FindOrdersByUserID(userID)
 }

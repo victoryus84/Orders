@@ -9,29 +9,34 @@ import (
 )
 
 type Service interface {
+	// Authentication methods
 	Signup(email, password, role string) error
 	Login(email, password string) (string, error)
 
+	// Order methods
 	CreateOrder(userID uint, order *models.Order) error
 	FindOrdersByUserID(userID uint) ([]models.Order, error)
 	FindOrderByID(id uint) (*models.Order, error)
 
+	// Client methods
 	CreateClient(client *models.Client) error
 	FindClientByID(id uint) (*models.Client, error)
 	FindClientByFiscalID(fiscalID string) (*models.Client, error)
-
-	CreateContract(contract *models.Contract) error
 	GetFirst1000Clients() ([]models.Client, error)
 	FindClientsByQuery(query string) ([]models.Client, error)
-	FindContractByID(id uint) (*models.Contract, error)
 
+	// Contract methods
+	CreateContract(contract *models.Contract) error
+	FindContractByID(id uint) (*models.Contract, error)
 	CreateContractAddress(addr *models.ContractAddress) error
 	FindContractAddressByID(id uint) (*models.ContractAddress, error)
 
+	// Product methods
 	CreateProduct(product *models.Product) error
 	FindProductByID(id uint) (*models.Product, error)
 	FindVatTaxByID(id uint) (*models.VatTax, error)
 	FindUnitByID(id uint) (*models.Unit, error)
+	FindProductGroupByID(id uint) (*models.ProductGroup, error)
 }
 
 func SetupRoutes(router *gin.Engine, service Service) {

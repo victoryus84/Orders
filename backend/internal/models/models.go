@@ -29,11 +29,11 @@ func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 type User struct {
 	gorm.Model
 	UUIDModel `gorm:"embedded"`
-	Email     string `gorm:"unique;not null"` // Email-ul utilizatorului (unic)
-	Password  string `gorm:"not null"`        // Hash-ul parolei (nu se afișează în JSON)
-	Role      string // Rolul utilizatorului ("admin", "user" etc.)
-	CanalID   *uint  // Cheie externă către canalul de vânzări
-	Canal     *Canal `gorm:"foreignKey:CanalID"` // Canalul de vânzări al utilizatorului
+	Email     string `gorm:"unique;not null"`           // Email-ul utilizatorului (unic)
+	Password  string `gorm:"not null"`                  // Hash-ul parolei (nu se afișează în JSON)
+	Role      string `gorm:"type:varchar(20);not null"` // Rolul utilizatorului ("admin", "user" etc.)
+	CanalID   uint   `gorm:"default:null"`              // Cheie externă către canalul de vânzări
+	Canal     Canal  `gorm:"foreignKey:CanalID"`        // Canalul de vânzări al utilizatorului
 }
 
 // ****************************************************
@@ -104,17 +104,30 @@ type ContractAddress struct {
 
 // ****************************************************
 
+// ********** ProductGroup - Grupa de Produse **********
+type ProductGroup struct {
+	gorm.Model
+	UUIDModel   `gorm:"embedded"`
+	Name        string    `gorm:"type:varchar(100);not null;unique"` // Numele grupei (ex: "Băuturi", "Electronice")
+	Description string    `gorm:"type:text"`                         // Descrierea grupei
+	Products    []Product `gorm:"foreignKey:ProductGroupID"`         // O grupă are mai multe produse
+}
+
+// ****************************************************
+
 // ********** Product - Produs **********
 type Product struct {
 	gorm.Model
-	UUIDModel   `gorm:"embedded"`
-	Name        string  `gorm:"type:varchar(100);not null"`        // Numele produsului
-	Price       float64 `gorm:"type:decimal(10,2);not null"`       // Prețul produsului
-	Description string  `gorm:"type:text"`                         // Descrierea produsului
-	UnitID      uint    `gorm:"not null"`                          // ID-ul unității de măsură
-	Unit        Unit    `gorm:"foreignKey:UnitID;references:ID"`   // Unitatea de măsură a produsului
-	VatTaxID    uint    `gorm:"not null"`                          // ID-ul taxei VAT
-	VatTax      VatTax  `gorm:"foreignKey:VatTaxID;references:ID"` // Taxa VAT a produsului
+	UUIDModel      `gorm:"embedded"`
+	Name           string       `gorm:"type:varchar(100);not null"`              // Numele produsului
+	Price          float64      `gorm:"type:decimal(10,2);not null"`             // Prețul produsului
+	Description    string       `gorm:"type:text"`                               // Descrierea produsului
+	ProductGroupID uint         `gorm:"not null"`                                // ID-ul grupei de produse
+	ProductGroup   ProductGroup `gorm:"foreignKey:ProductGroupID;references:ID"` // Grupa de produse din care face parte
+	UnitID         uint         `gorm:"not null"`                                // ID-ul unității de măsură
+	Unit           Unit         `gorm:"foreignKey:UnitID;references:ID"`         // Unitatea de măsură a produsului
+	VatTaxID       uint         `gorm:"not null"`                                // ID-ul taxei VAT
+	VatTax         VatTax       `gorm:"foreignKey:VatTaxID;references:ID"`       // Taxa VAT a produsului
 }
 
 // ****************************************************
@@ -180,16 +193,18 @@ type PriceProduct struct {
 // ********** Order - Comandă **********
 type Order struct {
 	gorm.Model
-	UUIDModel  `gorm:"embedded"`
-	OwnerID    uint        `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
-	Owner      User        `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul comenzii
-	ClientID   uint        `gorm:"not null"`                            // ID-ul clientului (cheie externă)
-	Client     Client      `gorm:"foreignKey:ClientID;references:ID"`   // Clientul care a plasat comanda
-	ContractID uint        `gorm:"not null"`                            // ID-ul contractului (cheie externă)
-	Contract   Contract    `gorm:"foreignKey:ContractID;references:ID"` // Contractul asociat comenzii
-	TotalPrice float64     `gorm:"type:decimal(10,2);not null"`         // Suma totală a comenzii
-	Status     string      `gorm:"type:varchar(20);not null"`           // Statusul comenzii
-	OrderItems []OrderItem `gorm:"foreignKey:OrderID"`                  // Pozițiile comenzii
+	UUIDModel   `gorm:"embedded"`
+	OwnerID     uint        `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
+	Owner       User        `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul comenzii
+	ClientID    uint        `gorm:"not null"`                            // ID-ul clientului (cheie externă)
+	Client      Client      `gorm:"foreignKey:ClientID;references:ID"`   // Clientul care a plasat comanda
+	PriceTypeID uint        `gorm:"not null"`                            // ID-ul tipului de preț (cheie externă)
+	PriceType   PriceType   `gorm:"foreignKey:PriceTypeID"`              // Tipul de preț al comenzii
+	ContractID  uint        `gorm:"not null"`                            // ID-ul contractului (cheie externă)
+	Contract    Contract    `gorm:"foreignKey:ContractID;references:ID"` // Contractul asociat comenzii
+	TotalPrice  float64     `gorm:"type:decimal(10,2);not null"`         // Suma totală a comenzii
+	Status      string      `gorm:"type:varchar(20);not null"`           // Statusul comenzii
+	OrderItems  []OrderItem `gorm:"foreignKey:OrderID"`                  // Pozițiile comenzii
 }
 
 // ****************************************************
@@ -201,13 +216,16 @@ type OrderItem struct {
 	OrderID     uint    `gorm:"not null"`                           // ID-ul comenzii
 	ProductID   uint    `gorm:"not null"`                           // ID-ul produsului
 	Product     Product `gorm:"foreignKey:ProductID;references:ID"` // Produsul asociat poziției
-	Quantity    int     `gorm:"not null"`                           // Cantitatea
+	Quantity    float64 `gorm:"type:decimal(10,3);not null"`        // Cantitatea
 	Price       float64 `gorm:"type:decimal(10,2);not null"`        // Prețul unitar la momentul comenzii
 	UnitID      uint    `gorm:"not null"`                           // ID-ul unității de măsură
 	Unit        Unit    `gorm:"foreignKey:UnitID;references:ID"`    // Unitatea de măsură asociată poziției
+	UnitName    string  `gorm:"type:varchar(20)"`                   // Stocăm "KG" sau "BUC"
 	VatTaxID    uint    `gorm:"not null"`                           // ID-ul taxei VAT
 	VatTax      VatTax  `gorm:"foreignKey:VatTaxID;references:ID"`  // Taxa VAT asociată poziției
+	VatRate     float64 `gorm:"type:decimal(10,2);not null"`        // Rata TVA-ului (preluată din VatTax)
 	Summ        float64 `gorm:"type:decimal(10,2);not null"`        // Suma totală pentru poziție (Price * Quantity)
+	VatSumm     float64 `gorm:"type:decimal(10,2);not null"`        // Valoarea TVA-ului în bani
 	SummWithVat float64 `gorm:"type:decimal(10,2);not null"`        // Suma totală pentru poziție cu TVA (Summ + VAT)
 }
 

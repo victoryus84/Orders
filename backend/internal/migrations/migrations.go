@@ -12,10 +12,14 @@ func GetAllModels() []interface{} {
 		&models.PriceType{},
 		// Main entities
 		&models.User{},
+		// Client methods
 		&models.Client{},
+		// Contract methods
 		&models.Contract{},
 		&models.ContractAddress{},
+		// Product methods
 		&models.Product{},
+		&models.ProductGroup{},
 		&models.VatTax{},
 		&models.IncomeTax{},
 		&models.Unit{},
