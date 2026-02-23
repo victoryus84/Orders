@@ -15,7 +15,7 @@ import (
 // Handler pentru crearea produsului
 type ProductRequest struct {
 	Name           string  `json:"name" xml:"name" binding:"required"`
-	Price          float64 `json:"price" xml:"price" binding:"required"`
+	Price          float64 `json:"price" xml:"price"`
 	Description    string  `json:"description" xml:"description"`
 	ProductGroupID uint    `json:"product_group_id" xml:"product_group_id" binding:"required"`
 	UnitID         uint    `json:"unit_id" xml:"unit_id" binding:"required"`
@@ -93,7 +93,7 @@ func CreateProductHandler(s Service) gin.HandlerFunc {
 
 		for _, req := range requests {
 			// Basic validation (these fields are required)
-			if strings.TrimSpace(req.Name) == "" || req.Price <= 0 || req.ProductGroupID == 0 || req.UnitID == 0 || req.VatTaxID == 0 {
+			if strings.TrimSpace(req.Name) == "" || req.ProductGroupID == 0 || req.UnitID == 0 || req.VatTaxID == 0 {
 				skipped = append(skipped, map[string]string{"name": req.Name, "reason": "missing_required_fields_or_invalid_values"})
 				continue
 			}
