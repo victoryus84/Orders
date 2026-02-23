@@ -7,7 +7,10 @@ import (
 // GetAllModels returns all models that need to be migrated
 func GetAllModels() []interface{} {
 	return []interface{}{
+		// Reference data
 		&models.ClientType{},
+		&models.PriceType{},
+		// Main entities
 		&models.User{},
 		&models.Client{},
 		&models.Contract{},
@@ -16,8 +19,8 @@ func GetAllModels() []interface{} {
 		&models.VatTax{},
 		&models.IncomeTax{},
 		&models.Unit{},
-		&models.PriceType{},
 		&models.PriceProduct{},
+		// Documents
 		&models.Order{},
 		&models.OrderItem{},
 	}

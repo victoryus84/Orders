@@ -4,10 +4,10 @@ import (
 	"log"
 	"orders/internal/api"
 	"orders/internal/config"
+	"orders/internal/migrations"
 	"orders/internal/repository"
 	"orders/internal/seeds"
 	"orders/internal/service"
-	"orders/internal/migrations"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +22,7 @@ func main() {
 	cfg := config.Load()
 	log.Println("✅ Config loaded")
 
-	// Подключение к БД
+	// Connect to database
 	db, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
@@ -33,8 +33,12 @@ func main() {
 	if err := db.AutoMigrate(migrations.GetAllModels()...); err != nil {
 		log.Fatal("migration failed:", err)
 	}
-    log.Println("✅ Migration completed successfully")
+	log.Println("✅ Migration completed successfully")
 
+	// Clean up orphaned columns
+	if err := migrations.DropUnusedColumns(db); err != nil {
+		log.Fatal("cleanup failed:", err)
+	}
 	// Seed initial data
 	// WaitGroup to manage goroutines
 	var wg sync.WaitGroup
