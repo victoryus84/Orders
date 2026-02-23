@@ -25,3 +25,27 @@ func GetAllModels() []interface{} {
 		&models.OrderItem{},
 	}
 }
+
+// TableNameToModel maps database table names to model struct names
+func TableNameToModel(tableName string) string {
+	tableMap := map[string]string{
+		"client_types":       "ClientType",
+		"price_types":        "PriceType",
+		"users":              "User",
+		"clients":            "Client",
+		"contracts":          "Contract",
+		"contract_addresses": "ContractAddress",
+		"products":           "Product",
+		"vat_taxes":          "VatTax",
+		"income_taxes":       "IncomeTax",
+		"units":              "Unit",
+		"price_products":     "PriceProduct",
+		"orders":             "Order",
+		"order_items":        "OrderItem",
+	}
+
+	if v, ok := tableMap[tableName]; ok {
+		return v
+	}
+	return tableName
+}

@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"log"
-	"orders/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -11,24 +10,7 @@ import (
 func DropUnusedColumns(db *gorm.DB) error {
 	log.Println("\n🧹 Cleaning up orphaned columns from database...")
 
-	tables := []interface{}{
-		// Reference data
-		&models.ClientType{},
-		&models.PriceType{},
-		// Main entities
-		&models.User{},
-		&models.Client{},
-		&models.Contract{},
-		&models.ContractAddress{},
-		&models.Product{},
-		&models.VatTax{},
-		&models.IncomeTax{},
-		&models.Unit{},
-		&models.PriceProduct{},
-		// Documents
-		&models.Order{},
-		&models.OrderItem{},
-	}
+	tables := GetAllModels()
 
 	dropCount := 0
 

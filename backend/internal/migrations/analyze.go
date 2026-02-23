@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"log"
-	"orders/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -31,24 +30,7 @@ func GetDBColumns(db *gorm.DB, tableName string) ([]string, error) {
 func AnalyzeSchemaSync(db *gorm.DB) {
 	log.Println("\n======= 🔍 DATABASE SCHEMA ANALYSIS =======")
 
-	tables := []interface{}{
-		// Reference data
-		&models.ClientType{},
-		&models.PriceType{},
-		// Main entities
-		&models.User{},
-		&models.Client{},
-		&models.Contract{},
-		&models.ContractAddress{},
-		&models.Product{},
-		&models.VatTax{},
-		&models.IncomeTax{},
-		&models.Unit{},
-		&models.PriceProduct{},
-		// Documents
-		&models.Order{},
-		&models.OrderItem{},
-	}
+	tables := GetAllModels()
 
 	for _, table := range tables {
 		analyzeTable(db, table)
@@ -125,21 +107,7 @@ func analyzeTable(db *gorm.DB, table interface{}) {
 func PrintSyncCommands(db *gorm.DB) {
 	log.Println("\n======= 📋 AUTO-FIX COMMANDS =======")
 
-	tables := []interface{}{
-		&models.ClientType{},
-		&models.PriceType{},
-		&models.User{},
-		&models.Client{},
-		&models.Contract{},
-		&models.ContractAddress{},
-		&models.Product{},
-		&models.VatTax{},
-		&models.IncomeTax{},
-		&models.Unit{},
-		&models.PriceProduct{},
-		&models.Order{},
-		&models.OrderItem{},
-	}
+	tables := GetAllModels()
 
 	for _, table := range tables {
 		stmt := &gorm.Statement{DB: db}
@@ -163,34 +131,10 @@ func PrintSyncCommands(db *gorm.DB) {
 		for _, col := range dbColumns {
 			if !modelColumns[col] {
 				log.Printf("db.Migrator().DropColumn(&models.%s{}, \"%s\")\n",
-					capitalizeTableName(tableName), col)
+					TableNameToModel(tableName), col)
 			}
 		}
 	}
 
 	log.Println("\n====================================")
-}
-
-func capitalizeTableName(name string) string {
-	// Simple mapping - you can enhance this if needed
-	tableMap := map[string]string{
-		"client_types":       "ClientType",
-		"price_types":        "PriceType",
-		"users":              "User",
-		"clients":            "Client",
-		"contracts":          "Contract",
-		"contract_addresses": "ContractAddress",
-		"products":           "Product",
-		"vat_taxes":          "VatTax",
-		"income_taxes":       "IncomeTax",
-		"units":              "Unit",
-		"price_products":     "PriceProduct",
-		"orders":             "Order",
-		"order_items":        "OrderItem",
-	}
-
-	if v, ok := tableMap[name]; ok {
-		return v
-	}
-	return name
 }
