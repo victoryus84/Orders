@@ -35,10 +35,16 @@ func main() {
 	}
 	log.Println("✅ Migration completed successfully")
 
+	// Analyze schema differences
+	migrations.AnalyzeSchemaSync(db)
+	migrations.PrintSyncCommands(db)
+
 	// Clean up orphaned columns
 	if err := migrations.DropUnusedColumns(db); err != nil {
 		log.Fatal("cleanup failed:", err)
 	}
+	log.Println("✅ Cleanup completed successfully")
+
 	// Seed initial data
 	// WaitGroup to manage goroutines
 	var wg sync.WaitGroup
