@@ -23,7 +23,9 @@ type ProductRequest struct {
 }
 
 func CreateProductHandler(s Service) gin.HandlerFunc {
+
 	return func(c *gin.Context) {
+
 		contentType := c.ContentType()
 		var requests []ProductRequest
 
@@ -37,6 +39,7 @@ func CreateProductHandler(s Service) gin.HandlerFunc {
 		// Restore body for potential downstream handlers
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(data))
 
+		// Try XML first if content type is XML, then JSON. Support array, wrapper object, and single object for both formats.
 		if contentType == "application/xml" || contentType == "text/xml" {
 			// Try to unmarshal wrapper <products><product>...</product></products>
 			var wrapper struct {
@@ -54,7 +57,10 @@ func CreateProductHandler(s Service) gin.HandlerFunc {
 				}
 				requests = append(requests, single)
 			}
-		} else {
+		}
+
+		// For JSON, try array, wrapper {"products": [...]}, then single object
+		if contentType == "application/json" || contentType == "text/json" {
 			// JSON: try array, wrapper {"products": [...]}, then single object
 			var arr []ProductRequest
 			if err := json.Unmarshal(data, &arr); err == nil && len(arr) > 0 {
@@ -76,6 +82,12 @@ func CreateProductHandler(s Service) gin.HandlerFunc {
 			}
 		}
 
+		// If we couldn't parse any products, return an error
+		if len(requests) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported content-type. Use application/json or application/xml"})
+			return
+		}
+
 		created := make([]*models.Product, 0)
 		skipped := make([]map[string]string, 0)
 
@@ -90,14 +102,17 @@ func CreateProductHandler(s Service) gin.HandlerFunc {
 				skipped = append(skipped, map[string]string{"name": req.Name, "reason": "invalid_product_group_id"})
 				continue
 			}
+
 			if _, err := s.FindUnitByID(req.UnitID); err != nil {
 				skipped = append(skipped, map[string]string{"name": req.Name, "reason": "invalid_unit_id"})
 				continue
 			}
+
 			if _, err := s.FindVatTaxByID(req.VatTaxID); err != nil {
 				skipped = append(skipped, map[string]string{"name": req.Name, "reason": "invalid_vat_tax_id"})
 				continue
 			}
+
 			product := &models.Product{
 				Name:           req.Name,
 				Price:          req.Price,
@@ -111,6 +126,7 @@ func CreateProductHandler(s Service) gin.HandlerFunc {
 				skipped = append(skipped, map[string]string{"name": req.Name, "reason": err.Error()})
 				continue
 			}
+
 			created = append(created, product)
 		}
 

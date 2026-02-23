@@ -36,6 +36,7 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 		// Restore body for potential downstream handlers
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(data))
 
+		// Try XML first if content type is XML, then JSON. Support array, wrapper object, and single object for both formats.
 		if contentType == "application/xml" || contentType == "text/xml" {
 			// Try to unmarshal wrapper <clients><client>...</client></clients>
 			var wrapper struct {
@@ -53,7 +54,10 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 				}
 				requests = append(requests, single)
 			}
-		} else {
+		}
+
+		// JSON: try array, wrapper {"clients": [...]}, then single object
+		if contentType == "application/json" || contentType == "text/json" {
 			// JSON: try array, wrapper {"clients": [...]}, then single object
 			var arr []ClientCreateRequest
 			if err := json.Unmarshal(data, &arr); err == nil && len(arr) > 0 {
@@ -73,6 +77,12 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 					requests = append(requests, single)
 				}
 			}
+		}
+
+		// If we couldn't parse any clients, return an error
+		if len(requests) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported content-type. Use application/json or application/xml"})
+			return
 		}
 
 		created := make([]*models.Client, 0)
