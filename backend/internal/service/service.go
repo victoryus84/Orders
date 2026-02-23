@@ -94,6 +94,7 @@ func (service *Service) Login(email, password string) (string, error) {
 func (service *Service) CreateClient(client *models.Client) error {
 	return service.repository.CreateClient(client)
 }
+
 func (service *Service) GetFirst1000Clients() ([]models.Client, error) {
 	return service.repository.GetFirst1000Clients()
 }
