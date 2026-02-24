@@ -10,20 +10,6 @@ type UUIDModel struct {
 	UUID string `gorm:"type:uuid;uniqueIndex;default null"`
 }
 
-func (m *UUIDModel) BeforeCreate(tx *gorm.DB) (err error) {
-	if m.UUID == "" {
-		m.UUID = uuid.New().String()
-	}
-	return
-}
-
-func (u *User) AfterCreate(tx *gorm.DB) (err error) {
-	if u.ID == 1 {
-		tx.Model(u).Update("role", "admin")
-	}
-	return
-}
-
 // Directories - Directoare
 // ********** User - Utilizatorul sistemului **********
 type User struct {
@@ -137,7 +123,7 @@ type VatTax struct {
 	gorm.Model
 	UUIDModel   `gorm:"embedded"`
 	Name        string  `gorm:"type:varchar(100);not null"`  // Numele taxei
-	Rate        float32 `gorm:"type:decimal(10,2);not null"` // Rata taxei
+	Rate        float64 `gorm:"type:decimal(10,2);not null"` // Rata taxei
 	Description string  `gorm:"type:text"`                   // Descrierea taxei
 }
 
@@ -148,7 +134,7 @@ type IncomeTax struct {
 	gorm.Model
 	UUIDModel   `gorm:"embedded"`
 	Name        string  `gorm:"type:varchar(100);not null"`  // Numele taxei
-	Rate        float32 `gorm:"type:decimal(10,2);not null"` // Rata taxei
+	Rate        float64 `gorm:"type:decimal(10,2);not null"` // Rata taxei
 	Description string  `gorm:"type:text"`                   // Descrierea taxei
 }
 
@@ -230,3 +216,21 @@ type OrderItem struct {
 }
 
 // ****************************************************
+
+// Hooks - Hook-uri GORM
+// BeforeCreate hook pentru UUIDModel - generează un UUID dacă nu este deja setat
+
+func (m *UUIDModel) BeforeCreate(tx *gorm.DB) (err error) {
+	if m.UUID == "" {
+		m.UUID = uuid.New().String()
+	}
+	return
+}
+
+// AfterCreate hook pentru User - dacă este primul utilizator creat, îi setează rolul de admin
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+	if u.ID == 1 {
+		tx.Model(u).Update("role", "admin")
+	}
+	return
+}
