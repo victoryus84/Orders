@@ -108,5 +108,6 @@ func SetupRoutes(router *gin.Engine, service Service) {
 		// --- Products ---
 		protected.POST("/products", CreateProductHandler(service))
 		protected.GET("/products/:id", GetProductByIDHandler(service))
+
 	}
 }
