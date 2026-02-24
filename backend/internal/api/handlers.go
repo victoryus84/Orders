@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 	"orders/internal/models"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -99,75 +98,15 @@ func SetupRoutes(router *gin.Engine, service Service) {
 		protected.GET("/clients/:id", GetClientByIDHandler(service))
 
 		// --- Contracts ---
-		protected.POST("/contracts", func(context *gin.Context) {
-			var contract models.Contract
-			if err := context.ShouldBindJSON(&contract); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			if err := service.CreateContract(&contract); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			context.JSON(http.StatusOK, contract)
-		})
-
-		protected.GET("/contracts/:id", func(context *gin.Context) {
-			id, _ := strconv.Atoi(context.Param("id"))
-			contract, err := service.FindContractByID(uint(id))
-			if err != nil {
-				context.JSON(http.StatusNotFound, gin.H{"error": "Contract not found"})
-				return
-			}
-			context.JSON(http.StatusOK, contract)
-		})
+		protected.POST("/contracts", CreateContractHandler(service))
+		protected.GET("/contracts/:id", GetContractByIDHandler(service))
 
 		// --- ContractAddresses ---
-		protected.POST("/contract_addresses", func(context *gin.Context) {
-			var addr models.ContractAddress
-			if err := context.ShouldBindJSON(&addr); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			if err := service.CreateContractAddress(&addr); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			context.JSON(http.StatusOK, addr)
-		})
-
-		protected.GET("/contract_addresses/:id", func(context *gin.Context) {
-			id, _ := strconv.Atoi(context.Param("id"))
-			addr, err := service.FindContractAddressByID(uint(id))
-			if err != nil {
-				context.JSON(http.StatusNotFound, gin.H{"error": "Contract address not found"})
-				return
-			}
-			context.JSON(http.StatusOK, addr)
-		})
+		protected.POST("/contract_addresses", CreateContractAddressHandler(service))
+		protected.GET("/contract_addresses/:id", GetContractAddressByIDHandler(service))
 
 		// --- Products ---
-		protected.POST("/products", func(context *gin.Context) {
-			var product models.Product
-			if err := context.ShouldBindJSON(&product); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			if err := service.CreateProduct(&product); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
-			context.JSON(http.StatusOK, product)
-		})
-
-		protected.GET("/products/:id", func(context *gin.Context) {
-			id, _ := strconv.Atoi(context.Param("id"))
-			product, err := service.FindProductByID(uint(id))
-			if err != nil {
-				context.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-				return
-			}
-			context.JSON(http.StatusOK, product)
-		})
+		protected.POST("/products", CreateProductHandler(service))
+		protected.GET("/products/:id", GetProductByIDHandler(service))
 	}
 }

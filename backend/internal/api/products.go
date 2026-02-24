@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"orders/internal/models"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -131,5 +132,25 @@ func CreateProductHandler(s Service) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, gin.H{"created": created, "skipped": skipped})
+	}
+}
+
+// GetProductByIDHandler gestionează GET /products/:id
+func GetProductByIDHandler(s Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.ParseUint(idStr, 10, 32)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+			return
+		}
+
+		product, err := s.FindProductByID(uint(id))
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, product)
 	}
 }
