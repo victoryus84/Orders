@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"strings"
 
@@ -17,6 +18,10 @@ func ParseBody[T any](c *gin.Context) ([]T, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("--- DEBUG DATA START ---")
+	fmt.Println(string(data))
+	fmt.Println("--- DEBUG DATA END ---")
 
 	contentType := c.GetHeader("Content-Type")
 
