@@ -36,6 +36,7 @@ func ParseBody[T any](c *gin.Context) ([]T, error) {
 			return []T{single}, nil
 		}
 	}
+
 	// Detectăm dacă e JSON (default)
 	if strings.Contains(contentType, "json") {
 		// Detectăm dacă e JSON (default)
