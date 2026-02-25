@@ -63,21 +63,29 @@ func SetupRoutes(router *gin.Engine, service Service) {
 	})
 
 	router.POST("/login", func(context *gin.Context) {
-		var req struct {
+		// 1. Folosim procedura universală care știe JSON și XML
+		// Definim o structură locală sau folosim una din modele
+		type LoginReq struct {
 			Email    string `json:"email" xml:"email"`
 			Password string `json:"password" xml:"password"`
 		}
-		if err := context.ShouldBindJSON(&req); err != nil {
-			if err := context.ShouldBindXML(&req); err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
+
+		requests, err := ParseBody[LoginReq](context)
+		if err != nil || len(requests) == 0 {
+			context.JSON(http.StatusBadRequest, gin.H{"error": "Date invalide sau body gol"})
+			return
 		}
+
+		// Luăm prima cerere din listă
+		req := requests[0]
+
+		// 2. Logica de login
 		token, err := service.Login(req.Email, req.Password)
 		if err != nil {
 			context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 			return
 		}
+
 		context.JSON(http.StatusOK, gin.H{"token": token})
 	})
 
