@@ -1,41 +1,43 @@
 # 1) Build stage
-FROM golang:1.23 AS builder
+# Folosim varianta alpine și pentru builder pentru consistență și viteză
+FROM golang:1.26-alpine AS builder
+
+# Instalăm git doar dacă este necesar pentru module private (folosind apk)
+RUN apk add --no-cache git
+
 WORKDIR /app
 
-
-# Install build deps using apt (for Debian-based golang image)
-RUN apt-get update && apt-get install -y --no-install-recommends git && apt-get clean
-
-
 COPY go.mod go.sum ./
-RUN go mod download
 
+# OPTIMIZARE: Folosim un mount cache pentru a nu descărca modulele la fiecare build
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 COPY . .
 
-
-# Build static binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/server ./cmd/server
-
+# OPTIMIZARE: Folosim mount cache și pentru build-ul propriu-zis
+# Go 1.26 beneficiază enorm de cache-ul de compilare refolosit
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o /app/server ./cmd/server
 
 # 2) Runtime stage
-FROM alpine:3.20
+# Am updatat alpine la o versiune de început de 2026
+FROM alpine:3.23 
+
 WORKDIR /app
+
+# Luăm binarul din builder
 COPY --from=builder /app/server /app/server
 
-# Non-root user
+# Securitate: Creăm utilizatorul fără privilegii
 RUN adduser -D appuser
 USER appuser
 
-# Environment variables (optional, adjust as needed)
 ENV PORT=8080
-
-# Expose port
 EXPOSE ${PORT}
 
-# Healthcheck (optional, add if you have a health endpoint)
 HEALTHCHECK --interval=30s --timeout=3s \
     CMD wget --no-check-certificate --quiet --tries=1 --spider http://localhost:${PORT}/health || exit 1
 
-# Entry point
 ENTRYPOINT ["/app/server"]
