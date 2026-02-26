@@ -19,9 +19,10 @@ func ParseBody[T any](c *gin.Context) ([]T, error) {
 		return nil, err
 	}
 
-	fmt.Println("--- DEBUG DATA START ---")
-	fmt.Println(string(data))
-	fmt.Println("--- DEBUG DATA END ---")
+	// fmt.Println("--- DEBUG DATA START ---")
+	fmt.Println("No debugging DATA for now, but you can uncomment the lines below to see the raw request body in logs.")
+	// fmt.Println(string(data))
+	// fmt.Println("--- DEBUG DATA END ---")
 
 	contentType := c.GetHeader("Content-Type")
 
