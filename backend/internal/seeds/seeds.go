@@ -119,3 +119,30 @@ func SeedUnits(db *gorm.DB) error {
 	}
 	return nil
 }
+
+func SeedChannels(db *gorm.DB) error {
+	channels := []models.Channel{
+		{Name: "online", Description: "Online sales channel"},
+		{Name: "retail", Description: "Retail store sales channel"},
+		{Name: "wholesale", Description: "Wholesale sales channel"},
+		{Name: "direct", Description: "Direct sales channel"},
+	}
+
+	for _, channel := range channels {
+		// Check if it already exists
+		var existing models.Channel
+		if err := db.Where("name = ?", channel.Name).First(&existing).Error; err == gorm.ErrRecordNotFound {
+			// Insert if not found
+			if err := db.Create(&channel).Error; err != nil {
+				log.Printf("❌ Failed to seed Channel '%s': %v\n", channel.Name, err)
+				return err
+			}
+			log.Printf("✅ Seeded Channel: %s\n", channel.Name)
+		} else if err != nil {
+			return err
+		} else {
+			log.Printf("⏭️ Channel '%s' already exists\n", channel.Name)
+		}
+	}
+	return nil
+}

@@ -9,7 +9,7 @@
   - **lib/widgets/** — переиспользуемые виджеты (кнопки, выпадающие списки и др.)
 
 - **backend/** — серверная часть на Go (Golang)
-  - **internal/models/** — структуры данных для GORM (User, Canal, Client, Order и др.)
+  - **internal/models/** — структуры данных для GORM (User, Channel, Client, Order и др.)
   - **internal/api/** — обработчики HTTP-запросов (handlers.go)
   - **cmd/** — точка входа приложения (main.go)
   - **routes/** — маршруты API (если используются)

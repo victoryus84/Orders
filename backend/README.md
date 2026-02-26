@@ -31,7 +31,7 @@ Backend-ul este implementat în Go folosind framework-ul Gin pentru HTTP și GOR
 
 ## Modele (pe scurt)
 
-- User — utilizator, stochează email, parolă (hash), rol și legătură la canalul de vânzări (CanalID / Canal). Poate fi nullable.
+- User — utilizator, stochează email, parolă (hash), rol și legătură la canalele de vânzări. Poate fi nullable.
 - Client — client (beneficiar): câmpuri `Name`, `Email`, `Phone`, `Address`, `UserID` (proprietar).
 - Contract — contractul clientului: `ClientID`, `Number`, `Date`, `Amount`, `Status` și legături către `Client` și `ContractAddress`.
 - ContractAddress, Product, Order, OrderItem — entități auxiliare pentru adrese, produse și comenzi.

@@ -11,24 +11,26 @@ type UUIDModel struct {
 }
 
 // Directories - Directoare
+
 // ********** User - Utilizatorul sistemului **********
 type User struct {
 	gorm.Model
 	UUIDModel `gorm:"embedded"`
-	Email     string `gorm:"unique;not null"`           // Email-ul utilizatorului (unic)
-	Password  string `gorm:"not null"`                  // Hash-ul parolei (nu se afișează în JSON)
-	Role      string `gorm:"type:varchar(20);not null"` // Rolul utilizatorului ("admin", "user" etc.)
-	CanalID   uint   `gorm:"default:null"`              // Cheie externă către canalul de vânzări
-	Canal     Canal  `gorm:"foreignKey:CanalID"`        // Canalul de vânzări al utilizatorului
+	Email     string    `gorm:"unique;not null"`           // Email-ul utilizatorului (unic)
+	Password  string    `gorm:"not null"`                  // Hash-ul parolei (nu se afișează în JSON)
+	Role      string    `gorm:"type:varchar(20);not null"` // Rolul utilizatorului ("admin", "user" etc.)
+	Channels  []Channel `gorm:"many2many:user_channels;"`  // Canalele de vânzări la care are acces utilizatorul
 }
 
 // ****************************************************
 
-// ********** Canal - Canal de vânzări **********
-type Canal struct {
+// ********** Channel - Canal de vânzări **********
+type Channel struct {
 	gorm.Model
-	UUIDModel `gorm:"embedded"`
-	Name      string `gorm:"type:varchar(100);not null"` // Numele canalului
+	UUIDModel   `gorm:"embedded"`
+	Name        string `gorm:"type:varchar(100);not null"` // Numele canalului
+	Description string `gorm:"type:text"`                  // Descrierea canalului
+	Users       []User `gorm:"many2many:user_channels;"`   // Utilizatorii care aparțin acestui canal
 }
 
 // ****************************************************
