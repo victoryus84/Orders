@@ -25,6 +25,12 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Am updatat alpine la o versiune de început de 2026
 FROM alpine:3.23 
 
+# Pasul 1: Instalăm pachetul pentru fus orar
+RUN apk add --no-cache tzdata
+
+# Pasul 2: Setăm variabila de mediu pentru Moldova
+ENV TZ=Europe/Chisinau
+
 WORKDIR /app
 
 # Luăm binarul din builder
