@@ -3,9 +3,34 @@ package seeds
 import (
 	"log"
 	"orders/internal/models"
+	"sync"
 
 	"gorm.io/gorm"
 )
+
+func RunAllSeeds(db *gorm.DB) {
+    seeders := []struct {
+        name string
+        fn   func(*gorm.DB) error
+    }{
+        {"ClientTypes", SeedClientTypes},
+        {"VatTaxes", SeedVatTaxes},
+        {"IncomeTaxes", SeedIncomeTaxes},
+        {"Units", SeedUnits},
+    }
+
+    var wg sync.WaitGroup
+    for _, s := range seeders {
+        wg.Add(1)
+        go func(name string, f func(*gorm.DB) error) {
+            defer wg.Done()
+            if err := f(db); err != nil {
+                log.Printf("Error seeding %s: %v", name, err)
+            }
+        }(s.name, s.fn)
+    }
+    wg.Wait()
+}
 
 // SeedClientTypes populates the ClientType table with initial data
 func SeedClientTypes(db *gorm.DB) error {

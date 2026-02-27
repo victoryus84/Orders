@@ -8,7 +8,6 @@ import (
 	"orders/internal/repository"
 	"orders/internal/seeds"
 	"orders/internal/service"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -46,47 +45,8 @@ func main() {
 	log.Println("✅ Cleanup completed successfully")
 
 	// Seed initial data
-	// WaitGroup to manage goroutines
-	var wg sync.WaitGroup
-
-	// Goroutine for populating ClientType
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := seeds.SeedClientTypes(db); err != nil {
-			log.Printf("Error seeding ClientTypes: %v", err)
-		}
-	}()
-
-	// Goroutine for populating VatTax
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := seeds.SeedVatTaxes(db); err != nil {
-			log.Printf("Error seeding VatTaxes: %v", err)
-		}
-	}()
-
-	// Goroutine for populating IncomeTax
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := seeds.SeedIncomeTaxes(db); err != nil {
-			log.Printf("Error seeding IncomeTaxes: %v", err)
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := seeds.SeedUnits(db); err != nil {
-			log.Printf("Error seeding Units: %v", err)
-		}
-	}()
-
-	// Wait for all goroutines to finish
-	wg.Wait()
-	log.Println("✅ Seeding completed")
+	seeds.RunAllSeeds(db)
+    log.Println("✅ Seeding completed")
 
 	// Repository and Service
 	repo := repository.NewRepository(db)
