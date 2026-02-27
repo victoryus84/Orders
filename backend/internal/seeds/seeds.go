@@ -17,6 +17,7 @@ func RunAllSeeds(db *gorm.DB) {
         {"VatTaxes", SeedVatTaxes},
         {"IncomeTaxes", SeedIncomeTaxes},
         {"Units", SeedUnits},
+		{"Channels", SeedChannels},
     }
 
     var wg sync.WaitGroup
