@@ -5,16 +5,18 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+val fixedBuildDir = file("D:/Orders/frontend/build")
+
+rootProject.layout.buildDirectory.value(
+    rootProject.layout.projectDirectory.dir(fixedBuildDir.absolutePath)
+)
 
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
+    val newSubprojectBuildDir: Directory = 
+        rootProject.layout.buildDirectory.get().dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

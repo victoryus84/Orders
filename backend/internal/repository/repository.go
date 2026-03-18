@@ -64,9 +64,13 @@ func (repository *Repository) FindClientsByQuery(query string) ([]models.Client,
 	}
 	var clients []models.Client
 	err := repository.db.
-		Where("name ILIKE ? OR email ILIKE ?", "%"+query+"%", "%"+query+"%").
-		Limit(50).
-		Find(&clients).Error
+		Where("name ILIKE ? OR email ILIKE ? OR fiscal_id ILIKE ? OR phone ILIKE ?",
+        "%"+query+"%",
+        "%"+query+"%",
+        "%"+query+"%",
+        "%"+query+"%").
+    Limit(50).
+    Find(&clients).Error
 	return clients, err
 }
 

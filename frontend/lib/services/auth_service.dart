@@ -34,4 +34,13 @@ class AuthService {
     await prefs.remove(_tokenKey);
     _cachedToken = null;
   }
+
+    /// Получаем заголовки с токеном
+  static Map<String, String> getHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (_cachedToken != null) 'Authorization': 'Bearer $_cachedToken',
+    };
+  }
 }

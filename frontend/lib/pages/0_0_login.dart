@@ -1,3 +1,4 @@
+import 'package:frontend/core/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
@@ -27,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       try {
-        final url = Uri.parse('https://servidar.work.gd/login');
+        final url = Uri.parse('${AppConfig.baseUrl}/login');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json'},
