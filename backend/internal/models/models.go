@@ -54,7 +54,7 @@ type Client struct {
 	FiscalID      string     `gorm:"type:varchar(15);unique;not null"`  // Codul fiscal al clientului (unic)
 	Email         string     `gorm:"type:varchar(100);unique;not null"` // Email-ul clientului (unic)
 	Phone         string     `gorm:"type:varchar(50)"`                  // Telefonul clientului
-	Address 	  string     `gorm:"type:text"`                         // Adresa clientului
+	FiscalAddress string     `gorm:"type:text"`                         // Adresa fiscală a clientului
 	PostalAddress string     `gorm:"type:text"`                   		// Adresa postala a clientului
 	Contracts     []Contract `gorm:"foreignKey:ClientID"`               // Contractele clientului
 	Addresses     []ClientAddress `gorm:"foreignKey:ClientID"`          // Adresele asociate clientului

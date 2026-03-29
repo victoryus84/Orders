@@ -19,7 +19,8 @@ type ClientCreateReq struct {
 	// Email is optional for now; accept empty or placeholder values until the DB holds actual emails
 	Email   string `json:"email" xml:"email" binding:"omitempty"`
 	Phone   string `json:"phone" xml:"phone"`
-	Address string `json:"address" xml:"address"`
+	FiscalAddress string `json:"fiscal_address" xml:"fiscal_address"`
+	PostalAddress string `json:"postal_address" xml:"postal_address"`
 }
 
 func CreateClientHandler(s Service) gin.HandlerFunc {
@@ -69,7 +70,8 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 				FiscalID:     req.FiscalID,
 				Email:        email,
 				Phone:        req.Phone,
-				Address:      req.Address,
+				FiscalAddress:req.FiscalAddress,
+				PostalAddress:req.PostalAddress,
 			}
 
 			// E. Salvarea efectivă
