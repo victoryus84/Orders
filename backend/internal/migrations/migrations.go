@@ -14,6 +14,7 @@ func GetAllModels() []interface{} {
 		&models.User{},
 		// Client methods
 		&models.Client{},
+		&models.ClientAddress{},
 		// Contract methods
 		&models.Contract{},
 		&models.ContractAddress{},

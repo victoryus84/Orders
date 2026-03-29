@@ -64,10 +64,10 @@ type Client struct {
 type ClientAddress struct {
 	gorm.Model
 	UUIDModel  `gorm:"embedded"`
-	ClientID uint     `gorm:"not null"`                            // Cheie externă către Client
 	Address    string   `gorm:"type:text;not null"`                  // Adresa
 	Type       string   `gorm:"type:varchar(50)"`                    // Tipul adresei ("billing", "shipping" etc.)
-	Contract   Contract `gorm:"foreignKey:ContractID;references:ID"` // Contractul
+	ClientID uint     `gorm:"not null"`                            // Cheie externă către Client
+	Client   Client `gorm:"foreignKey:ClientID;references:ID"` // Clientul
 	OwnerID    uint     `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
 	Owner      User     `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul adresei
 }
@@ -94,9 +94,9 @@ type Contract struct {
 type ContractAddress struct {
 	gorm.Model
 	UUIDModel  `gorm:"embedded"`
-	ContractID uint     `gorm:"not null"`                            // Cheie externă către Contract
 	Address    string   `gorm:"type:text;not null"`                  // Adresa
 	Type       string   `gorm:"type:varchar(50)"`                    // Tipul adresei ("billing", "shipping" etc.)
+	ContractID uint     `gorm:"not null"`                            // Cheie externă către Contract
 	Contract   Contract `gorm:"foreignKey:ContractID;references:ID"` // Contractul
 	OwnerID    uint     `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
 	Owner      User     `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul adresei
@@ -143,7 +143,7 @@ type VatTax struct {
 
 // ****************************************************
 
-// ********** Product - Produs **********
+// ********** IncomeTax - Taxă pe venit **********
 type IncomeTax struct {
 	gorm.Model
 	UUIDModel   `gorm:"embedded"`
