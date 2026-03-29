@@ -38,6 +38,7 @@ func TableNameToModel(tableName string) string {
 		"price_types":        "PriceType",
 		"users":              "User",
 		"clients":            "Client",
+		"client_addresses":   "ClientAddress",
 		"contracts":          "Contract",
 		"contract_addresses": "ContractAddress",
 		"products":           "Product",
