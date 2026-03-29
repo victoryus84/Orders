@@ -45,10 +45,14 @@ func analyzeTable(db *gorm.DB, table interface{}) {
 
 	tableName := stmt.Table
 
-	// Get columns from model
+	// Get columns from model - FILTRĂM DOAR COLOANELE REALE
 	modelColumns := make(map[string]bool)
 	for _, field := range stmt.Schema.Fields {
-		modelColumns[field.DBName] = true
+		// Dacă DBName e gol, înseamnă că e o relație virtuală (ex: Client Client)
+		// sau un câmp ignorat, deci nu îl numărăm ca și coloană în DB
+		if field.DBName != "" {
+			modelColumns[field.DBName] = true
+		}
 	}
 
 	// Get columns from database
@@ -80,22 +84,23 @@ func analyzeTable(db *gorm.DB, table interface{}) {
 	}
 
 	// Print report
-	if len(orphanedColumns) == 0 && len(missingColumns) == 0 {
-		log.Printf("✅ %s - SYNCED (DB: %d cols, Model: %d cols)\n",
-			tableName, len(dbColumnsMap), len(modelColumns))
+if len(orphanedColumns) == 0 && len(missingColumns) == 0 {
+		// Acum numerele vor fi identice (ex: 12 coloane la 12 coloane)
+		log.Printf("✅ %-20s - SYNCED (%d physical columns)\n", 
+            tableName, len(dbColumnsMap))
 	} else {
 		log.Printf("\n⚠️  TABLE: %s\n", tableName)
-		log.Printf("   DB Columns: %d | Model Columns: %d\n", len(dbColumnsMap), len(modelColumns))
+		log.Printf("   Physical DB: %d | Physical Model: %d\n", len(dbColumnsMap), len(modelColumns))
 
 		if len(orphanedColumns) > 0 {
-			log.Printf("   🗑️  ORPHANED IN DB (can be deleted):\n")
+			log.Printf("   🗑️  ORPHANED (Există în DB, dar NU în Model):\n")
 			for _, col := range orphanedColumns {
 				log.Printf("      - %s\n", col)
 			}
 		}
 
 		if len(missingColumns) > 0 {
-			log.Printf("   ❌ MISSING IN DB (need to add):\n")
+			log.Printf("   ❌ MISSING (Lipsesc din DB, trebuie create):\n")
 			for _, col := range missingColumns {
 				log.Printf("      - %s\n", col)
 			}
@@ -118,7 +123,9 @@ func PrintSyncCommands(db *gorm.DB) {
 		// Get columns from model
 		modelColumns := make(map[string]bool)
 		for _, field := range stmt.Schema.Fields {
-			modelColumns[field.DBName] = true
+			if field.DBName != "" {
+				modelColumns[field.DBName] = true
+			}
 		}
 
 		// Get columns from database
