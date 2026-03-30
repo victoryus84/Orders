@@ -12,10 +12,10 @@ import (
 )
 
 // Handler pentru crearea clientului
-type ClientCreateReq struct {
+type ClientReq struct {
 	ClientTypeID uint   `json:"client_type" xml:"client_type" binding:"required"`
 	Name         string `json:"name" xml:"name" binding:"required"`
-	FiscalID     string `json:"fiscal_code" xml:"fiscal_code" binding:"required"`
+	FiscalID     string `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
 	// Email is optional for now; accept empty or placeholder values until the DB holds actual emails
 	Email   string `json:"email" xml:"email" binding:"omitempty"`
 	Phone   string `json:"phone" xml:"phone"`
@@ -27,7 +27,7 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// PASUL 1: Folosim procedura "ParseBody" pentru parsare
 		// Această singură linie înlocuiește tot blocul tău mare de IF-uri (JSON/XML/Array)
-		requests, err := ParseBody[ClientCreateReq](c)
+		requests, err := ParseBody[ClientReq](c)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Format invalid: " + err.Error()})
 			return
