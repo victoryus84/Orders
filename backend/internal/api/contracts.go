@@ -5,6 +5,8 @@ import (
 	"orders/internal/models"
 	"strconv"
 	"strings"
+	"time"
+	"log"
 	"github.com/gin-gonic/gin"
 )
 
@@ -69,11 +71,27 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 				continue
 			}
 
+
+			// --- LOGICA PENTRU DATA (INFINITĂ SAU NORMALĂ) ---
+			var reqDatePtr *time.Time // Default este nil (NULL în Postgres)
+			dateStr := strings.TrimSpace(req.Date)
+
+			if dateStr != "" && dateStr != "00.00.0000" && dateStr != "01-01-0001" {
+				// Parsăm data folosind formatul tău din 1C (Zi-Lună-An)
+				t, err := time.Parse("02-01-2006", dateStr)
+				if err == nil {
+					reqDatePtr = &t
+				} else {
+					// Folosim log.Printf pentru a vedea eroarea în consola Gin
+					log.Printf("[IMPORT ERROR] Data invalida pentru contractul %s: %v", req.Number, err)
+				}
+			}
+
 			// C. Conversia de la REQ (ce vine din 1C) la MODEL (ce pleacă în Postgres)
 			contract := &models.Contract{
 				Number:   req.Number,
 				Name:     req.Name,
-				Date:     req.Date,
+				Date:     reqDatePtr,
 				Amount:   req.Amount,
 				Status:   req.Status,
 				ClientID: client.ID, // <--- Aici e "magia": ID-ul de Postgres al clientului

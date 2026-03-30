@@ -1,6 +1,7 @@
 package models
 
 import (
+	"time"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -80,7 +81,7 @@ type Contract struct {
 	UUIDModel `gorm:"embedded"`
 	Number    string            `gorm:"type:varchar(50);not null;unique"`  // Numărul contractului
 	Name      string            `gorm:"type:varchar(100);not null"`        // Numele contractului
-	Date      string            `gorm:"type:date;not null"`                // Data contractului
+	Date 	  *time.Time `gorm:"type:date"`             // Data contractului
 	Amount    float64           `gorm:"type:decimal(10,2);not null"`       // Suma contractului
 	Status    string            `gorm:"type:varchar(20);not null"`         // Statutul ("active", "closed" etc.)
 	ClientID  uint              `gorm:"not null"`                          // Cheie externă către Client
