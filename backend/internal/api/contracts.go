@@ -1,25 +1,24 @@
 package api
 
 import (
+	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"orders/internal/models"
 	"strconv"
 	"strings"
 	"time"
-	"log"
-	"github.com/gin-gonic/gin"
 )
 
 // --- DTOs (Data Transfer Objects) ---
 
 type ContractReq struct {
-	Number   string  `json:"number" xml:"number" binding:"required"`
+	Number   string  `json:"number" xml:"number"`
 	Name     string  `json:"name" xml:"name" binding:"required"`
-	Date     string  `json:"date" xml:"date" binding:"required"` // Format YYYY-MM-DD
+	Date     string  `json:"date" xml:"date"` // Format YYYY-MM-DD
 	Amount   float64 `json:"amount" xml:"amount"`
-	ClientID uint    `json:"client_id" xml:"client_id" binding:"required"`
 	Status   string  `json:"status" xml:"status"`
-	FiscalID string `json:"fiscal_id" xml:"fiscal_id" binding:"required"` // Pentru că 1C trimite Codul Fiscal, nu ID-ul de Client din Postgres
+	FiscalID string  `json:"fiscal_id" xml:"fiscal_id" binding:"required"` // Pentru că 1C trimite Codul Fiscal, nu ID-ul de Client din Postgres
 }
 
 type AddressReq struct {
@@ -49,37 +48,35 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 
 		// PASUL 2: Logica de business pentru fiecare contract
 		for _, req := range requests {
-			// A. Validare de bază (Câmpurile obligatorii din 1C)
-			if strings.TrimSpace(req.Number) == "" || strings.TrimSpace(req.FiscalID) == "" {
+			
+			// A. Validare detaliată
+			// Verificăm dacă lipsește Codul Fiscal
+			if strings.TrimSpace(req.FiscalID) == "" {
 				skipped = append(skipped, map[string]string{
-					"number": req.Number, 
-					"reason": "missing_required_fields (number or fiscal_id)",
+					"number": req.Name,
+					"reason": "EROARE: Campul 'fiscal_id' a ajuns GOL. Clientul nu poate fi gasit!",
 				})
 				continue
 			}
 
-			// B. CĂUTAREA TATĂLUI (Găsim Clientul după Codul Fiscal din 1C)
-			// Aici folosim funcția pe care o ai deja în Service
+			// B. Căutarea clientului (rămâne la fel)
 			client, err := s.FindClientByFiscalID(req.FiscalID)
 			if err != nil {
-				// Dacă nu găsim clientul, nu putem crea contractul!
 				skipped = append(skipped, map[string]string{
-					"number":     req.Number,
-					"fiscal_id":  req.FiscalID,
-					"reason":     "client_not_found",
+					"number": req.Name,
+					"reason": "Clientul cu FiscalID " + req.FiscalID + " nu exista in baza de date!",
 				})
 				continue
 			}
 
 			// --- LOGICA PENTRU NUMBER (NUMAR SAU NULL) ---
 			rawNumber := strings.TrimSpace(req.Number)
-            var numberPtr *string
+			var numberPtr *string
 			// Dacă e număr pe bune, salvăm numărul
 			if rawNumber != "" {
-    			numberPtr = &rawNumber 
+				numberPtr = &rawNumber
 			}
 
-	
 			// --- LOGICA PENTRU DATA (INFINITĂ SAU NORMALĂ) ---
 			var datePtr *time.Time // Default este nil (NULL în Postgres)
 			dateStr := strings.TrimSpace(req.Date)
@@ -109,7 +106,7 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 			// D. Salvarea efectivă prin Service
 			if err := s.CreateContract(contract); err != nil {
 				skipped = append(skipped, map[string]string{
-					"number": req.Number, 
+					"number": req.Number,
 					"reason": "db_save_error: " + err.Error(),
 				})
 				continue
@@ -126,11 +123,11 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"status":          "success",
-			"total_created":   len(created),
-			"total_skipped":   len(skipped),
-			"errors_preview":  shortSkipped, // Trimitem doar o mostră de erori
-			"message":         "Import contracts finalizat cu succes",
+			"status":         "success",
+			"total_created":  len(created),
+			"total_skipped":  len(skipped),
+			"errors_preview": shortSkipped, // Trimitem doar o mostră de erori
+			"message":        "Import contracts finalizat cu succes",
 		})
 	}
 }
