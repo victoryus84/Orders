@@ -1,12 +1,8 @@
 package repository
 
 import (
-	"fmt"
 	"orders/internal/models"
 	"strings"
-
-	"github.com/google/uuid"
-
 	"gorm.io/gorm"
 )
 
@@ -34,24 +30,18 @@ func (repository *Repository) FindUserByEmail(email string) (*models.User, error
 
 // Client methods
 func (repository *Repository) CreateClient(client *models.Client) error {
-	// Normalize email value
-	em := strings.TrimSpace(client.Email)
-	el := strings.ToLower(em)
-	if em == "" || el == "not inserted" || el == "not_inserted" || el == "n/a" || el == "none" {
-		// If the DB has an email column and it's NOT NULL, we must provide a non-null, unique value.
-		// Use a timestamp-based placeholder to avoid unique constraint collisions.
-		client.Email = fmt.Sprintf("placeholder_%s@local.invalid", uuid.New().String())
-	}
+    if client.Email != nil {
+        em := strings.TrimSpace(*client.Email)
+        el := strings.ToLower(em)
 
-	// Check if email column exists
-	if !repository.db.Migrator().HasColumn(client, "Email") {
-		return repository.db.Omit("Email").Create(client).Error
-	}
+        // Dacă e mizerie (n/a, none, gol), îl facem NIL
+        if em == "" || el == "not inserted" || el == "n/a" || el == "none" {
+            client.Email = nil // În DB se va duce NULL (și e unic!)
+        }
+    }
 
-	return repository.db.Create(client).Error
-
+    return repository.db.Create(client).Error
 }
-
 func (repository *Repository) GetFirst1000Clients() ([]models.Client, error) {
 	var clients []models.Client
 	err := repository.db.Preload("ClientType").Limit(1000).Find(&clients).Error

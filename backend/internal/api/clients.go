@@ -57,10 +57,12 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 			}
 
 			// C. Sanitizarea email-ului (Asta e foarte deșteaptă!)
-			email := strings.TrimSpace(req.Email)
-			lowEmail := strings.ToLower(email)
-			if lowEmail == "not inserted" || lowEmail == "n/a" || lowEmail == "none" || lowEmail == "" {
-				email = "" // O lăsăm goală dacă e placeholder
+			rawEmail := strings.TrimSpace(req.Email)
+            lowEmail := strings.ToLower(rawEmail)
+			var emailPtr *string
+			// Dacă e email pe bune, salvăm adresa lui
+			if lowEmail != "" && lowEmail != "not inserted" && lowEmail != "n/a" && lowEmail != "none" {
+    			emailPtr = &rawEmail 
 			}
 
 			// D. Conversia de la REQ la MODEL
@@ -68,7 +70,7 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 				ClientTypeID: req.ClientTypeID,
 				Name:         req.Name,
 				FiscalID:     req.FiscalID,
-				Email:        email,
+				Email:        emailPtr,
 				Phone:        req.Phone,
 				FiscalAddress:req.FiscalAddress,
 				PostalAddress:req.PostalAddress,
