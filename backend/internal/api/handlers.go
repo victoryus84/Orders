@@ -23,6 +23,7 @@ type Service interface {
 	FindClientByFiscalID(fiscalID string) (*models.Client, error)
 	GetFirst1000Clients() ([]models.Client, error)
 	FindClientsByQuery(query string) ([]models.Client, error)
+	CreateClientAddress(addr *models.ClientAddress) error
 
 	// Contract methods
 	CreateContract(contract *models.Contract) error
@@ -105,6 +106,9 @@ func SetupRoutes(router *gin.Engine, service Service) {
 		protected.GET("/clients/search", SearchClientsHandler(service))
 		protected.GET("/clients/:id", GetClientByIDHandler(service))
 
+		// --- ClientAddresses ---
+		protected.POST("/client_addresses", CreateClientAddressHandler(service))
+		
 		// --- Contracts ---
 		protected.POST("/contracts", CreateContractHandler(service))
 		protected.GET("/contracts/:id", GetContractByIDHandler(service))

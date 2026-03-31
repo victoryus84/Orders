@@ -21,7 +21,7 @@ type ContractReq struct {
 	FiscalID string  `json:"fiscal_id" xml:"fiscal_id" binding:"required"` // Pentru că 1C trimite Codul Fiscal, nu ID-ul de Client din Postgres
 }
 
-type AddressReq struct {
+type ContractAddressReq struct {
 	ContractID uint   `json:"contract_id" xml:"contract_id" binding:"required"`
 	Address    string `json:"address" xml:"address" binding:"required"`
 	Type       string `json:"type" xml:"type"` // billing, shipping
@@ -134,7 +134,7 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 
 func CreateContractAddressHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		requests, err := ParseBody[AddressReq](c)
+		requests, err := ParseBody[ContractAddressReq](c)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid format"})
 			return

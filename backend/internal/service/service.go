@@ -24,10 +24,15 @@ type Repository interface {
 	FindClientsByQuery(query string) ([]models.Client, error)
 	FindClientByID(id uint) (*models.Client, error)
 	FindClientByFiscalID(fiscalID string) (*models.Client, error)
+	
+	// ClientAddress methods
+	CreateClientAddress(addr *models.ClientAddress) error
 
 	// Contract methods
 	CreateContract(contract *models.Contract) error
 	FindContractByID(id uint) (*models.Contract, error)
+	
+	// ContractAddress methods
 	CreateContractAddress(addr *models.ContractAddress) error
 	FindContractAddressByID(id uint) (*models.ContractAddress, error)
 
@@ -109,6 +114,10 @@ func (service *Service) FindClientByID(id uint) (*models.Client, error) {
 
 func (service *Service) FindClientByFiscalID(fiscalID string) (*models.Client, error) {
 	return service.repository.FindClientByFiscalID(fiscalID)
+}
+// ClientAddress methods
+func (service *Service) CreateClientAddress(addr *models.ClientAddress) error {
+	return service.repository.CreateClientAddress(addr)
 }
 
 // Contract methods

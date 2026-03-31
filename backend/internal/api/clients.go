@@ -23,6 +23,12 @@ type ClientReq struct {
 	PostalAddress string `json:"postal_address" xml:"postal_address"`
 }
 
+type ClientAddressReq struct {
+	FiscalID string  `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
+	Address    string `json:"address" xml:"address" binding:"required"`
+	Type       string `json:"type" xml:"type"` // billing, shipping
+}
+
 func CreateClientHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// PASUL 1: Folosim procedura "ParseBody" pentru parsare
@@ -171,3 +177,56 @@ func GetClientByIDHandler(s Service) gin.HandlerFunc {
 		c.JSON(http.StatusOK, client)
 	}
 }
+
+// Client address handlers
+func CreateClientAddressHandler(s Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+			
+		requests, err := ParseBody[ClientAddressReq](c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid format"})
+			return
+		}
+		// Luăm ID-ul utilizatorului din token (pentru coloana owner_id din DB)
+		val, _ := c.Get("user_id")
+		ownerID := val.(uint)
+
+		created := make([]*models.ClientAddress, 0)
+		skipped := make([]map[string]string, 0)
+
+		// PASUL 2: Logica de business pentru fiecare contract
+		for _, req := range requests {
+			// A. Validare detaliată
+			// Verificăm dacă lipsește Codul Fiscal
+			if strings.TrimSpace(req.FiscalID) == "" {
+				skipped = append(skipped, map[string]string{
+					"number": req.Address,
+					"reason": "EROARE: Campul 'fiscal_id' a ajuns GOL. Clientul nu poate fi gasit!",
+				})
+				continue
+			}
+
+			// B. Căutarea clientului (rămâne la fel)
+			client, err := s.FindClientByFiscalID(req.FiscalID)
+			if err != nil {
+				skipped = append(skipped, map[string]string{
+					"number": req.Address,
+					"reason": "Clientul cu FiscalID " + req.FiscalID + " nu exista in baza de date!",
+				})
+				continue
+			}
+			
+			// C. Conversia de la REQ (ce vine din 1C) la MODEL (ce pleacă în Postgres)
+			addr := &models.ClientAddress{
+				ClientID: 	client.ID,
+				Address:    req.Address,
+				Type:       req.Type,
+				OwnerID:    ownerID,
+			}
+			if err := s.CreateClientAddress(addr); err == nil {
+				created = append(created, addr)
+			}
+		}
+		c.JSON(http.StatusCreated, created)
+	}
+}	

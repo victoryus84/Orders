@@ -69,8 +69,8 @@ type ClientAddress struct {
 	UUIDModel  `gorm:"embedded"`
 	Address    string   `gorm:"type:text;not null"`                  // Adresa
 	Type       string   `gorm:"type:varchar(50)"`                    // Tipul adresei ("billing", "shipping" etc.)
-	ClientID uint     `gorm:"not null"`                              // Cheie externă către Client
-	Client   Client `gorm:"foreignKey:ClientID;references:ID"`       // Clientul
+	ClientID   uint     `gorm:"not null"`                            // Cheie externă către Client
+	Client     Client `gorm:"foreignKey:ClientID;references:ID"`     // Clientul
 	OwnerID    uint     `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
 	Owner      User     `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul adresei
 }
