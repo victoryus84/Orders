@@ -1,9 +1,9 @@
 package models
 
 import (
-	"time"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"time"
 )
 
 // UUIDModel provides a UUID field and a shared BeforeCreate hook.
@@ -48,40 +48,41 @@ type ClientType struct {
 // ********** Client - Client (beneficiar) **********
 type Client struct {
 	gorm.Model
-	UUIDModel    `gorm:"embedded"`
-	ClientTypeID  uint       `gorm:"not null"`                          // Foreign key to ClientType
-	ClientType    ClientType `gorm:"foreignKey:ClientTypeID;not null"`  // Tipul clientului ("individual", "company", etc.)
-	Name          string     `gorm:"type:varchar(100);not null"`        // Numele clientului
-	FiscalID      string     `gorm:"type:varchar(15);unique;not null"`  // Codul fiscal al clientului (unic)
-	Email         *string    `gorm:"type:varchar(100);unique"` 			// Email-ul clientului (unic)
-	Phone         string     `gorm:"type:varchar(50)"`                  // Telefonul clientului
-	FiscalAddress string     `gorm:"type:text"`                         // Adresa fiscală a clientului
-	PostalAddress string     `gorm:"type:text"`                   		// Adresa postala a clientului
-	Contracts     []Contract `gorm:"foreignKey:ClientID"`               // Contractele clientului
-	Addresses     []ClientAddress `gorm:"foreignKey:ClientID"`          // Adresele asociate clientului
+	UUIDModel     `gorm:"embedded"`
+	ClientTypeID  uint            `gorm:"not null"`                         // Foreign key to ClientType
+	ClientType    ClientType      `gorm:"foreignKey:ClientTypeID;not null"` // Tipul clientului ("individual", "company", etc.)
+	Name          string          `gorm:"type:varchar(100);not null"`       // Numele clientului
+	FiscalID      string          `gorm:"type:varchar(15);unique;not null"` // Codul fiscal al clientului (unic)
+	Email         *string         `gorm:"type:varchar(100);unique"`         // Email-ul clientului (unic)
+	Phone         string          `gorm:"type:varchar(50)"`                 // Telefonul clientului
+	FiscalAddress string          `gorm:"type:text"`                        // Adresa fiscală a clientului
+	PostalAddress string          `gorm:"type:text"`                        // Adresa postala a clientului
+	Contracts     []Contract      `gorm:"foreignKey:ClientID"`              // Contractele clientului
+	Addresses     []ClientAddress `gorm:"foreignKey:ClientID"`              // Adresele asociate clientului
 }
-
 // ****************************************************
 
 // ********** ClientAddress - Adresă asociată clientului **********
 type ClientAddress struct {
 	gorm.Model
-	UUIDModel  `gorm:"embedded"`
-	Address    string   `gorm:"type:text;not null"`                  // Adresa
-	Type       string   `gorm:"type:varchar(50)"`                    // Tipul adresei ("billing", "shipping" etc.)
-	ClientID   uint     `gorm:"not null"`                            // Cheie externă către Client
-	Client     Client `gorm:"foreignKey:ClientID;references:ID"`     // Clientul
-	OwnerID    uint     `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
-	Owner      User     `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul adresei
+	UUIDModel `gorm:"embedded"`
+	Name      string  `gorm:"type:varchar(100);not null"`        // Numele adresei
+	Address   *string `gorm:"type:text"`                         // Adresa
+	Type      string  `gorm:"type:varchar(50)"`                  // Tipul adresei ("billing", "shipping" etc.)
+	ClientID  uint    `gorm:"not null"`                          // Cheie externă către Client
+	Client    Client  `gorm:"foreignKey:ClientID;references:ID"` // Clientul
+	OwnerID   uint    `gorm:"not null"`                          // ID-ul ownerului (utilizatorului)
+	Owner     User    `gorm:"foreignKey:OwnerID;references:ID"`  // Ownerul adresei
 }
+// ****************************************************
 
 // ********** Contract - Contract cu clientul **********
 type Contract struct {
 	gorm.Model
 	UUIDModel `gorm:"embedded"`
-	Number    *string           `gorm:"type:varchar(50)"`  				   // Numărul contractului
 	Name      string            `gorm:"type:varchar(100);not null"`        // Numele contractului
-	Date 	  *time.Time `gorm:"type:date"`             				   // Data contractului
+	Number    *string           `gorm:"type:varchar(50)"`                  // Numărul contractului
+	Date      *time.Time        `gorm:"type:date"`                         // Data contractului
 	Amount    float64           `gorm:"type:decimal(10,2);not null"`       // Suma contractului
 	Status    string            `gorm:"type:varchar(20);not null"`         // Statutul ("active", "closed" etc.)
 	ClientID  uint              `gorm:"not null"`                          // Cheie externă către Client
@@ -90,7 +91,6 @@ type Contract struct {
 	Owner     User              `gorm:"foreignKey:OwnerID;references:ID"`  // Ownerul contractului
 	Addresses []ContractAddress `gorm:"foreignKey:ContractID"`             // Adresele asociate contractului
 }
-
 // ****************************************************
 
 // ********** ContractAddress - Adresă asociată contractului **********
@@ -104,7 +104,6 @@ type ContractAddress struct {
 	OwnerID    uint     `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
 	Owner      User     `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul adresei
 }
-
 // ****************************************************
 
 // ********** ProductGroup - Grupa de Produse **********
@@ -115,7 +114,6 @@ type ProductGroup struct {
 	Description string    `gorm:"type:text"`                         // Descrierea grupei
 	Products    []Product `gorm:"foreignKey:ProductGroupID"`         // O grupă are mai multe produse
 }
-
 // ****************************************************
 
 // ********** Product - Produs **********
@@ -132,7 +130,6 @@ type Product struct {
 	VatTaxID       uint         `gorm:"not null"`                                // ID-ul taxei VAT
 	VatTax         VatTax       `gorm:"foreignKey:VatTaxID;references:ID"`       // Taxa VAT a produsului
 }
-
 // ****************************************************
 
 // ********** VatRate - TVA **********
@@ -143,7 +140,6 @@ type VatTax struct {
 	Rate        float64 `gorm:"type:decimal(10,2);not null"` // Rata taxei
 	Description string  `gorm:"type:text"`                   // Descrierea taxei
 }
-
 // ****************************************************
 
 // ********** IncomeTax - Taxă pe venit **********
@@ -154,7 +150,6 @@ type IncomeTax struct {
 	Rate        float64 `gorm:"type:decimal(10,2);not null"` // Rata taxei
 	Description string  `gorm:"type:text"`                   // Descrierea taxei
 }
-
 // ****************************************************
 
 // ********** Units of Measurement - Unitati de măsură **********
@@ -166,7 +161,6 @@ type Unit struct {
 	Coefficient float64 `gorm:"type:decimal(10,4);not null;default:1.0"` // Coeficient de conversie față de unitatea de bază
 
 }
-
 // ****************************************************
 
 // ********** Price type of products - Tipuri de pret **********
@@ -176,7 +170,6 @@ type PriceType struct {
 	Name        string `gorm:"type:varchar(50);not null"` // Numele tipului de preț (ex: "Cu amamuntul", "En-gros")
 	Description string `gorm:"type:text"`                 // Descrierea tipiului de preț
 }
-
 // ****************************************************
 
 // ********** Price of products - Preturi producte **********
@@ -189,7 +182,6 @@ type PriceProduct struct {
 	PriceType   PriceType `gorm:"foreignKey:PriceTypeID;references:ID"` // Tipul de preț
 	Price       float64   `gorm:"type:decimal(10,2);not null"`          // Prețul pentru acest tip
 }
-
 // ****************************************************
 
 // Documents - Documente
@@ -209,7 +201,6 @@ type Order struct {
 	Status      string      `gorm:"type:varchar(20);not null"`           // Statusul comenzii
 	OrderItems  []OrderItem `gorm:"foreignKey:OrderID"`                  // Pozițiile comenzii
 }
-
 // ****************************************************
 
 // ********** OrderItem - Poziție comandă **********
@@ -231,7 +222,6 @@ type OrderItem struct {
 	VatSumm     float64 `gorm:"type:decimal(10,2);not null"`        // Valoarea TVA-ului în bani
 	SummWithVat float64 `gorm:"type:decimal(10,2);not null"`        // Suma totală pentru poziție cu TVA (Summ + VAT)
 }
-
 // ****************************************************
 
 // Hooks - Hook-uri GORM

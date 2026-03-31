@@ -11,22 +11,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// Handler pentru crearea clientului
 type ClientReq struct {
-	ClientTypeID uint   `json:"client_type" xml:"client_type" binding:"required"`
-	Name         string `json:"name" xml:"name" binding:"required"`
-	FiscalID     string `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
-	// Email is optional for now; accept empty or placeholder values until the DB holds actual emails
-	Email   string `json:"email" xml:"email" binding:"omitempty"`
-	Phone   string `json:"phone" xml:"phone"`
+	ClientTypeID  uint   `json:"client_type" xml:"client_type" binding:"required"`
+	Name          string `json:"name" xml:"name" binding:"required"`
+	FiscalID      string `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
+	Email         string `json:"email" xml:"email" binding:"omitempty"`
+	Phone         string `json:"phone" xml:"phone"`
 	FiscalAddress string `json:"fiscal_address" xml:"fiscal_address"`
 	PostalAddress string `json:"postal_address" xml:"postal_address"`
 }
 
 type ClientAddressReq struct {
-	FiscalID string  `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
-	Address    string `json:"address" xml:"address" binding:"required"`
-	Type       string `json:"type" xml:"type"` // billing, shipping
+	FiscalID string `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
+	Name     string `json:"name" xml:"name" binding:"required"`
+	Address  string `json:"address" xml:"address" binding:"required"`
+	Type     string `json:"type" xml:"type"` // billing, shipping
 }
 
 func CreateClientHandler(s Service) gin.HandlerFunc {
@@ -64,22 +63,22 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 
 			// C. Sanitizarea email-ului (Asta e foarte deșteaptă!)
 			rawEmail := strings.TrimSpace(req.Email)
-            lowEmail := strings.ToLower(rawEmail)
+			lowEmail := strings.ToLower(rawEmail)
 			var emailPtr *string
 			// Dacă e email pe bune, salvăm adresa lui
 			if lowEmail != "" && lowEmail != "not inserted" && lowEmail != "n/a" && lowEmail != "none" {
-    			emailPtr = &rawEmail 
+				emailPtr = &rawEmail
 			}
 
 			// D. Conversia de la REQ la MODEL
 			client := &models.Client{
-				ClientTypeID: req.ClientTypeID,
-				Name:         req.Name,
-				FiscalID:     req.FiscalID,
-				Email:        emailPtr,
-				Phone:        req.Phone,
-				FiscalAddress:req.FiscalAddress,
-				PostalAddress:req.PostalAddress,
+				ClientTypeID:  req.ClientTypeID,
+				Name:          req.Name,
+				FiscalID:      req.FiscalID,
+				Email:         emailPtr,
+				Phone:         req.Phone,
+				FiscalAddress: req.FiscalAddress,
+				PostalAddress: req.PostalAddress,
 			}
 
 			// E. Salvarea efectivă
@@ -90,18 +89,18 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 			created = append(created, client)
 		}
 
-			// Pregătim o listă scurtă cu erorile (doar primele 10, să nu omorâm 1C-ul)
+		// Pregătim o listă scurtă cu erorile (doar primele 10, să nu omorâm 1C-ul)
 		shortSkipped := skipped
 		if len(skipped) > 20 {
 			shortSkipped = skipped[:20]
 		}
 
 		c.JSON(http.StatusCreated, gin.H{
-			"status":          "success",
-			"total_created":   len(created),
-			"total_skipped":   len(skipped),
-			"errors_preview":  shortSkipped, // Trimitem doar o mostră de erori
-			"message":         "Import clients finalizat cu succes",
+			"status":         "success",
+			"total_created":  len(created),
+			"total_skipped":  len(skipped),
+			"errors_preview": shortSkipped, // Trimitem doar o mostră de erori
+			"message":        "Import clients finalizat cu succes",
 		})
 	}
 }
@@ -181,7 +180,7 @@ func GetClientByIDHandler(s Service) gin.HandlerFunc {
 // Client address handlers
 func CreateClientAddressHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-			
+
 		requests, err := ParseBody[ClientAddressReq](c)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid format"})
@@ -215,13 +214,22 @@ func CreateClientAddressHandler(s Service) gin.HandlerFunc {
 				})
 				continue
 			}
-			
+
+			// --- LOGICA PENTRU NUMBER (NUMAR SAU NULL) ---
+			rawaddress := strings.TrimSpace(req.Address)
+			var addressPtr *string
+			// Dacă e număr pe bune, salvăm numărul
+			if rawaddress != "" {
+				addressPtr = &rawaddress
+			}
+
 			// C. Conversia de la REQ (ce vine din 1C) la MODEL (ce pleacă în Postgres)
 			addr := &models.ClientAddress{
-				ClientID: 	client.ID,
-				Address:    req.Address,
-				Type:       req.Type,
-				OwnerID:    ownerID,
+				ClientID: client.ID,
+				Name:  	  req.Name,
+				Address:  addressPtr,
+				Type:     req.Type,
+				OwnerID:  ownerID,
 			}
 			if err := s.CreateClientAddress(addr); err == nil {
 				created = append(created, addr)
@@ -229,4 +237,4 @@ func CreateClientAddressHandler(s Service) gin.HandlerFunc {
 		}
 		c.JSON(http.StatusCreated, created)
 	}
-}	
+}
