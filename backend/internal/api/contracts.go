@@ -109,11 +109,20 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 			created = append(created, contract)
 		}
 
-		// PASUL 3: Răspunsul final către 1C / Frontend
+		// --- PASUL 3: Răspuns "LIGHT" pentru 1C 7.7 ---
+
+		// Pregătim o listă scurtă cu erorile (doar primele 10, să nu omorâm 1C-ul)
+		shortSkipped := skipped
+		if len(skipped) > 20 {
+			shortSkipped = skipped[:20]
+		}
+
 		c.JSON(http.StatusCreated, gin.H{
-			"created": created,
-			"skipped": skipped,
-			"count":   len(created),
+			"status":          "success",
+			"total_created":   len(created),
+			"total_skipped":   len(skipped),
+			"errors_preview":  shortSkipped, // Trimitem doar o mostră de erori
+			"message":         "Import contracts finalizat cu succes",
 		})
 	}
 }

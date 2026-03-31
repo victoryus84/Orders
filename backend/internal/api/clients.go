@@ -82,11 +82,18 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 			created = append(created, client)
 		}
 
-		// PASUL 3: Răspunsul final
+			// Pregătim o listă scurtă cu erorile (doar primele 10, să nu omorâm 1C-ul)
+		shortSkipped := skipped
+		if len(skipped) > 20 {
+			shortSkipped = skipped[:20]
+		}
+
 		c.JSON(http.StatusCreated, gin.H{
-			"created": created,
-			"skipped": skipped,
-			"count":   len(created),
+			"status":          "success",
+			"total_created":   len(created),
+			"total_skipped":   len(skipped),
+			"errors_preview":  shortSkipped, // Trimitem doar o mostră de erori
+			"message":         "Import clients finalizat cu succes",
 		})
 	}
 }
