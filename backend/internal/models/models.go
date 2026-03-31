@@ -53,7 +53,7 @@ type Client struct {
 	ClientType    ClientType `gorm:"foreignKey:ClientTypeID;not null"`  // Tipul clientului ("individual", "company", etc.)
 	Name          string     `gorm:"type:varchar(100);not null"`        // Numele clientului
 	FiscalID      string     `gorm:"type:varchar(15);unique;not null"`  // Codul fiscal al clientului (unic)
-	Email         *string    `gorm:"type:varchar(100);unique"` // Email-ul clientului (unic)
+	Email         *string    `gorm:"type:varchar(100);unique"` 			// Email-ul clientului (unic)
 	Phone         string     `gorm:"type:varchar(50)"`                  // Telefonul clientului
 	FiscalAddress string     `gorm:"type:text"`                         // Adresa fiscală a clientului
 	PostalAddress string     `gorm:"type:text"`                   		// Adresa postala a clientului
@@ -79,9 +79,9 @@ type ClientAddress struct {
 type Contract struct {
 	gorm.Model
 	UUIDModel `gorm:"embedded"`
-	Number    string            `gorm:"type:varchar(50)"`  // Numărul contractului
+	Number    *string           `gorm:"type:varchar(50)"`  				   // Numărul contractului
 	Name      string            `gorm:"type:varchar(100);not null"`        // Numele contractului
-	Date 	  *time.Time `gorm:"type:date"`             // Data contractului
+	Date 	  *time.Time `gorm:"type:date"`             				   // Data contractului
 	Amount    float64           `gorm:"type:decimal(10,2);not null"`       // Suma contractului
 	Status    string            `gorm:"type:varchar(20);not null"`         // Statutul ("active", "closed" etc.)
 	ClientID  uint              `gorm:"not null"`                          // Cheie externă către Client
