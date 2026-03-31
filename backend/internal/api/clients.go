@@ -231,10 +231,29 @@ func CreateClientAddressHandler(s Service) gin.HandlerFunc {
 				Type:     req.Type,
 				OwnerID:  ownerID,
 			}
-			if err := s.CreateClientAddress(addr); err == nil {
-				created = append(created, addr)
+			
+			// D. Salvarea efectivă prin Service
+			if err := s.CreateClientAddress(addr); err != nil {
+				skipped = append(skipped, map[string]string{
+					"number": req.Address,
+					"reason": "db_save_error: " + err.Error(),
+				})
+				continue
 			}
+			created = append(created, addr)
 		}
-		c.JSON(http.StatusCreated, created)
+		// Pregătim o listă scurtă cu erorile (doar primele 10, să nu omorâm 1C-ul)
+		shortSkipped := skipped
+		if len(skipped) > 20 {
+			shortSkipped = skipped[:20]
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"status":         "success",
+			"total_created":  len(created),
+			"total_skipped":  len(skipped),
+			"errors_preview": shortSkipped, // Trimitem doar o mostră de erori
+			"message":        "Import client addresses finalizat cu succes",
+		})
 	}
 }
