@@ -60,6 +60,7 @@ type Client struct {
 	Contracts     []Contract      `gorm:"foreignKey:ClientID"`              // Contractele clientului
 	Addresses     []ClientAddress `gorm:"foreignKey:ClientID"`              // Adresele asociate clientului
 }
+
 // ****************************************************
 
 // ********** ClientAddress - Adresă asociată clientului **********
@@ -74,6 +75,7 @@ type ClientAddress struct {
 	OwnerID   uint    `gorm:"not null"`                          // ID-ul ownerului (utilizatorului)
 	Owner     User    `gorm:"foreignKey:OwnerID;references:ID"`  // Ownerul adresei
 }
+
 // ****************************************************
 
 // ********** Contract - Contract cu clientul **********
@@ -91,6 +93,7 @@ type Contract struct {
 	Owner     User              `gorm:"foreignKey:OwnerID;references:ID"`  // Ownerul contractului
 	Addresses []ContractAddress `gorm:"foreignKey:ContractID"`             // Adresele asociate contractului
 }
+
 // ****************************************************
 
 // ********** ContractAddress - Adresă asociată contractului **********
@@ -104,6 +107,7 @@ type ContractAddress struct {
 	OwnerID    uint     `gorm:"not null"`                            // ID-ul ownerului (utilizatorului)
 	Owner      User     `gorm:"foreignKey:OwnerID;references:ID"`    // Ownerul adresei
 }
+
 // ****************************************************
 
 // ********** ProductGroup - Grupa de Produse **********
@@ -114,6 +118,7 @@ type ProductGroup struct {
 	Description string    `gorm:"type:text"`                         // Descrierea grupei
 	Products    []Product `gorm:"foreignKey:ProductGroupID"`         // O grupă are mai multe produse
 }
+
 // ****************************************************
 
 // ********** Product - Produs **********
@@ -130,6 +135,7 @@ type Product struct {
 	VatTaxID       uint         `gorm:"not null"`                                // ID-ul taxei VAT
 	VatTax         VatTax       `gorm:"foreignKey:VatTaxID;references:ID"`       // Taxa VAT a produsului
 }
+
 // ****************************************************
 
 // ********** VatRate - TVA **********
@@ -140,6 +146,7 @@ type VatTax struct {
 	Rate        float64 `gorm:"type:decimal(10,2);not null"` // Rata taxei
 	Description string  `gorm:"type:text"`                   // Descrierea taxei
 }
+
 // ****************************************************
 
 // ********** IncomeTax - Taxă pe venit **********
@@ -150,6 +157,7 @@ type IncomeTax struct {
 	Rate        float64 `gorm:"type:decimal(10,2);not null"` // Rata taxei
 	Description string  `gorm:"type:text"`                   // Descrierea taxei
 }
+
 // ****************************************************
 
 // ********** Units of Measurement - Unitati de măsură **********
@@ -161,6 +169,7 @@ type Unit struct {
 	Coefficient float64 `gorm:"type:decimal(10,4);not null;default:1.0"` // Coeficient de conversie față de unitatea de bază
 
 }
+
 // ****************************************************
 
 // ********** Price type of products - Tipuri de pret **********
@@ -170,6 +179,7 @@ type PriceType struct {
 	Name        string `gorm:"type:varchar(50);not null"` // Numele tipului de preț (ex: "Cu amamuntul", "En-gros")
 	Description string `gorm:"type:text"`                 // Descrierea tipiului de preț
 }
+
 // ****************************************************
 
 // ********** Price of products - Preturi producte **********
@@ -182,6 +192,7 @@ type PriceProduct struct {
 	PriceType   PriceType `gorm:"foreignKey:PriceTypeID;references:ID"` // Tipul de preț
 	Price       float64   `gorm:"type:decimal(10,2);not null"`          // Prețul pentru acest tip
 }
+
 // ****************************************************
 
 // Documents - Documente
@@ -201,6 +212,7 @@ type Order struct {
 	Status      string      `gorm:"type:varchar(20);not null"`           // Statusul comenzii
 	OrderItems  []OrderItem `gorm:"foreignKey:OrderID"`                  // Pozițiile comenzii
 }
+
 // ****************************************************
 
 // ********** OrderItem - Poziție comandă **********
@@ -222,6 +234,7 @@ type OrderItem struct {
 	VatSumm     float64 `gorm:"type:decimal(10,2);not null"`        // Valoarea TVA-ului în bani
 	SummWithVat float64 `gorm:"type:decimal(10,2);not null"`        // Suma totală pentru poziție cu TVA (Summ + VAT)
 }
+
 // ****************************************************
 
 // Hooks - Hook-uri GORM

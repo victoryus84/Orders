@@ -22,12 +22,15 @@ type ContractReq struct {
 }
 
 type ContractAddressReq struct {
+	Name	   string `json:"name" xml:"name" binding:"required"`
 	ContractID uint   `json:"contract_id" xml:"contract_id" binding:"required"`
 	Address    string `json:"address" xml:"address" binding:"required"`
 	Type       string `json:"type" xml:"type"` // billing, shipping
 }
 
 // --- HANDLERS ---
+
+// Contract handlers 
 
 func CreateContractHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -132,6 +135,20 @@ func CreateContractHandler(s Service) gin.HandlerFunc {
 	}
 }
 
+func GetContractByIDHandler(s Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, _ := strconv.Atoi(c.Param("id"))
+		res, err := s.FindContractByID(uint(id))
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Contract not found"})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+	}
+}
+
+// Contract Address handlers
+
 func CreateContractAddressHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requests, err := ParseBody[ContractAddressReq](c)
@@ -156,18 +173,6 @@ func CreateContractAddressHandler(s Service) gin.HandlerFunc {
 			}
 		}
 		c.JSON(http.StatusCreated, created)
-	}
-}
-
-func GetContractByIDHandler(s Service) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id, _ := strconv.Atoi(c.Param("id"))
-		res, err := s.FindContractByID(uint(id))
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Contract not found"})
-			return
-		}
-		c.JSON(http.StatusOK, res)
 	}
 }
 
