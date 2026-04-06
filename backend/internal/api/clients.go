@@ -11,17 +11,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type ClientReq struct {
+type ClientDTO struct {
+	ID 		  	  uint   `json:"id,omitempty" xml:"id,omitempty"` // Doar pentru update, la create va fi ignorat
 	ClientTypeID  uint   `json:"client_type" xml:"client_type" binding:"required"`
 	Name          string `json:"name" xml:"name" binding:"required"`
 	FiscalID      string `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
-	Email         string `json:"email" xml:"email" binding:"omitempty"`
-	Phone         string `json:"phone" xml:"phone"`
+	Email         string `json:"email,omitempty" xml:"email,omitempty" binding:"omitempty"`
+	Phone         string `json:"phone,omitempty" xml:"phone,omitempty" binding:"omitempty"`
 	FiscalAddress string `json:"fiscal_address" xml:"fiscal_address"`
 	PostalAddress string `json:"postal_address" xml:"postal_address"`
 }
 
-type ClientAddressReq struct {
+type ClientAddressDTO struct {
+	ID 	 	 uint   `json:"id,omitempty" xml:"id,omitempty"` // Doar pentru update, la create va fi ignorat
 	FiscalID string `json:"fiscal_id" xml:"fiscal_id" binding:"required"`
 	Name     string `json:"name" xml:"name" binding:"required"`
 	Address  string `json:"address" xml:"address" binding:"required"`
@@ -32,7 +34,7 @@ func CreateClientHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// PASUL 1: Folosim procedura "ParseBody" pentru parsare
 		// Această singură linie înlocuiește tot blocul tău mare de IF-uri (JSON/XML/Array)
-		requests, err := ParseBody[ClientReq](c)
+		requests, err := ParseBody[ClientDTO](c)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Format invalid: " + err.Error()})
 			return
@@ -121,20 +123,45 @@ func GetFirst1000Clients(s Service) gin.HandlerFunc {
 // Handler pentru căutarea clienților după query
 func SearchClientsHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		query := c.Query("q")
-		if query == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "query parameter 'q' is required"})
-			return
-		}
+        query := c.Query("q")
+        if query == "" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "Parametrul 'q' este obligatoriu"})
+            return
+        }
 
-		clients, err := s.FindClientsByQuery(query)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+        // 1. Iei datele brute din DB (Modelele GORM cu litere MARI)
+        dbClients, err := s.FindClientsByQuery(query)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
+        }
 
-		c.JSON(http.StatusOK, clients)
-	}
+        // 2. Mapezi în ClientDTO (care are tag-urile tale JSON și XML mici)
+        response := make([]ClientDTO, len(dbClients))
+        for i, cl := range dbClients {
+
+			// 1. Pregătim o variabilă string goală
+			var emailStr string
+			if cl.Email != nil {
+			// 2. Dacă nu e NULL în DB, îi luăm valoarea (dereferențiere cu *)
+			emailStr = *cl.Email
+			}
+            response[i] = ClientDTO{
+                ID:            cl.ID,
+                ClientTypeID:  cl.ClientTypeID,
+                Name:          cl.Name,
+                FiscalID:      cl.FiscalID,
+                Email:         emailStr,
+                Phone:         cl.Phone,
+                FiscalAddress: cl.FiscalAddress,
+                PostalAddress: cl.PostalAddress,
+            }
+        }
+
+        // 3. Trimitem DTO-ul. Gin se va uita la tag-urile json:"id" xml:"id"
+        // Dacă cererea vrea XML, Gin va folosi tag-urile de XML!
+        c.JSON(http.StatusOK, response)
+    }
 }
 
 // Handler pentru obținerea clientului după id
@@ -181,7 +208,7 @@ func GetClientByIDHandler(s Service) gin.HandlerFunc {
 func CreateClientAddressHandler(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		requests, err := ParseBody[ClientAddressReq](c)
+		requests, err := ParseBody[ClientAddressDTO](c)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid format"})
 			return

@@ -1,9 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:frontend/core/constants.dart';
-import 'package:frontend/models/client.dart';
-import 'package:frontend/services/auth_service.dart';
+import '../models/client.dart';
+import '../models/contract.dart';
+import '../services/api_service.dart';
+import '../controllers/order_controller.dart';
 
 class OrdersCreatePage extends StatefulWidget {
   final String title;
@@ -14,140 +13,127 @@ class OrdersCreatePage extends StatefulWidget {
 }
 
 class _OrdersCreatePageState extends State<OrdersCreatePage> {
-  // 1. VARIABILE DE STARE (Bordul de control)
-  Client? _selectedClient;
-  String? _selectedPaymentType;
-  final ValueNotifier<bool> _loadingNotifier = ValueNotifier<bool>(false);
-
-  // 2. LOGICA DE CĂUTARE CLIENȚI (GO BACKEND)
-  Future<List<Client>> _searchClientsFromGo(String query) async {
-    if (query.length < 3) return [];
-    _loadingNotifier.value = true;
-
-    
-    try {
-      debugPrint("HEADERS TRIMISE: ${AuthService.getHeaders()}");
-      final response = await http.get(
-        Uri.parse('${AppConfig.clientsSearchEndpoint}?q=$query'),
-        headers: AuthService.getHeaders(),
-      ).timeout(  
-        const Duration(milliseconds: AppConfig.apiTimeout),
-        onTimeout: () {
-          debugPrint("REQUEST TIMEOUT!");
-          throw Exception("Timeout la căutare clienți");
-        },
-      );  
-      if (response.statusCode == 200) {
-        debugPrint("DATE PRIMITE DE LA SERVER: ${response.body}");
-        List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Client.fromJson(json)).toList();
-      }
-    } catch (e) {
-      debugPrint("Eroare la căutare: $e");
-    } finally {
-      _loadingNotifier.value = false;
-    }
-    return [];
-  }
+  final OrderCreateController _controller = OrderCreateController();
+  final ApiService _api = ApiService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: SingleChildScrollView(
-        // Ca să nu avem erori de spațiu când apare tastatura
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- CÂMPUL 1: TIP PLATĂ (Нал / Бнал) ---
-            const Text(
-              "Выберите тип оплаты:",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedPaymentType,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.payments_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+      body: ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPaymentDropdown(),
+                const SizedBox(height: 24),
+                _buildClientAutocomplete(),
+                const SizedBox(height: 24),
+                // ADAUGĂM UN KEY: Acest lucru forțează resetarea dropdown-ului
+                // de contracte când se schimbă clientul selectat.
+                _buildContractDropdown(
+                  key: ValueKey(_controller.selectedClient?.id ?? 'none'),
                 ),
-              ),
-              hint: const Text("Нал / Бнал"),
-              items: const [
-                DropdownMenuItem(value: "Нал", child: Text("Наличные (Нал)")),
-                DropdownMenuItem(
-                  value: "Бнал",
-                  child: Text("Безналичные (Бнал)"),
-                ),
+                const SizedBox(height: 40),
+                _buildSubmitButton(),
               ],
-              onChanged: (val) => setState(() => _selectedPaymentType = val),
             ),
-
-            const SizedBox(height: 24),
-
-            // --- CÂMPUL 2: CĂUTARE CLIENT ---
-            const Text(
-              "Выберите клиента:",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Autocomplete<Client>(
-              displayStringForOption: (Client c) => c.name,
-              optionsBuilder: (textValue) =>
-                  _searchClientsFromGo(textValue.text),
-              onSelected: (selection) =>
-                  setState(() => _selectedClient = selection),
-              fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                return ValueListenableBuilder<bool>(
-                  valueListenable: _loadingNotifier,
-                  builder: (context, isLoading, _) {
-                    return TextFormField(
-                      controller: controller,
-                      focusNode: focusNode,
-                      decoration: InputDecoration(
-                        hintText: "Введите min 3 символа...",
-                        prefixIcon: const Icon(Icons.person_search),
-                        suffixIcon: isLoading
-                            ? const Padding(
-                                padding: EdgeInsets.all(12),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.arrow_drop_down),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-
-            const SizedBox(height: 40),
-
-            // --- BUTONUL DE SALVARE ---
-            ElevatedButton(
-              onPressed:
-                  (_selectedClient != null && _selectedPaymentType != null)
-                  ? () {
-                      /* Aici va veni funcția de Submit */
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text("СОЗДАТЬ ЗАКАЗ"),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
+  }
+
+  // --- COMPONENTELE EXTRASE ---
+
+  Widget _buildPaymentDropdown() {
+    return DropdownButtonFormField<String>(
+      // REZOLVARE DEPRECATION: Folosim initialValue în loc de value
+      initialValue: _controller.paymentType,
+      decoration: const InputDecoration(
+        labelText: "Tip Plată",
+        border: OutlineInputBorder(),
+      ),
+      items: const [
+        DropdownMenuItem(value: "Нал", child: Text("Наличные (Нал)")),
+        DropdownMenuItem(value: "Бнал", child: Text("Безналичные (Бнал)")),
+      ],
+      onChanged: (val) => _controller.setPaymentType(val),
+    );
+  }
+
+  Widget _buildClientAutocomplete() {
+    return Autocomplete<Client>(
+      // REZOLVARE INT/STRING: Ne asigurăm că name este transformat în String
+      displayStringForOption: (Client c) => c.name.toString(),
+      optionsBuilder: (textValue) => _api.searchClients(textValue.text),
+      onSelected: _controller.selectClient,
+      fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
+        return TextFormField(
+          controller: textController,
+          focusNode: focusNode,
+          decoration: const InputDecoration(
+            labelText: "Selectați Clientul",
+            prefixIcon: Icon(Icons.person_search),
+            border: OutlineInputBorder(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildContractDropdown({Key? key}) {
+    return DropdownButtonFormField<Contract>(
+      key: key, // Folosim cheia pentru resetare
+      // REZOLVARE DEPRECATION: initialValue în loc de value
+      initialValue: _controller.selectedContract,
+      decoration: InputDecoration(
+        labelText: "Contract",
+        border: const OutlineInputBorder(),
+        suffixIcon: _controller.isLoadingContracts
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : null,
+      ),
+      hint: Text(
+        _controller.selectedClient == null
+            ? "Alegeți clientul mai întâi"
+            : "Selectați contractul",
+      ),
+      items: _controller.availableContracts
+          .map(
+            (c) => DropdownMenuItem(
+              value: c,
+              // REZOLVARE INT/STRING: toString() forțează conversia
+              child: Text(c.name.toString()),
+            ),
+          )
+          .toList(),
+      onChanged: _controller.isLoadingContracts
+          ? null
+          : (val) => _controller.selectContract(val),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return ElevatedButton(
+      onPressed: _controller.isValid ? () => _handleSave() : null,
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: const Text("СОЗДАТЬ ЗАКАЗ"),
+    );
+  }
+
+  void _handleSave() {
+    // Folosim string interpolation "${...}" pentru a evita erorile de tip la print/log
+    debugPrint("Salvare comandă pentru: ${_controller.selectedClient?.name}");
   }
 }
