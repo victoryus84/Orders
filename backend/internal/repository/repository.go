@@ -94,6 +94,12 @@ func (repository *Repository) FindContractAddressByID(id uint) (*models.Contract
 	return &addr, err
 }
 
+func (repository *Repository) FindContractByClientID(clientID uint) ([]models.Contract, error) {
+	var contracts []models.Contract
+	err := repository.db.Where("client_id = ?", clientID).Find(&contracts).Error
+	return contracts, err
+}
+
 // Product methods
 func (repository *Repository) CreateProduct(product *models.Product) error {
 	return repository.db.Create(product).Error

@@ -31,6 +31,7 @@ type Repository interface {
 	// Contract methods
 	CreateContract(contract *models.Contract) error
 	FindContractByID(id uint) (*models.Contract, error)
+	FindContractByClientID(id uint) ([]models.Contract, error)
 	
 	// ContractAddress methods
 	CreateContractAddress(addr *models.ContractAddress) error
@@ -127,6 +128,10 @@ func (service *Service) CreateContract(contract *models.Contract) error {
 
 func (service *Service) FindContractByID(id uint) (*models.Contract, error) {
 	return service.repository.FindContractByID(id)
+}
+
+func (service *Service) FindContractByClientID(id uint) ([]models.Contract, error) {
+	return service.repository.FindContractByClientID(id)
 }
 
 // ContractAddress methods

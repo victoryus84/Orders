@@ -7,8 +7,8 @@ class Client {
   // Aceasta este "poarta" prin care trece JSON-ul de la Go în Dart
   factory Client.fromJson(Map<String, dynamic> json) {
     return Client(
-      id: json['ID'] as String,
-      name: json['Name'] as String,
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? 'Нет имени').toString(),
     );
   }
 }

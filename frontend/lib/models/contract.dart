@@ -6,8 +6,8 @@ class Contract {
 
   factory Contract.fromJson(Map<String, dynamic> json) {
     return Contract(
-      id: json['id'] ?? '',
-      name: json['name'] ?? 'Contract fără nume',
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? 'Contract fără nume').toString(),
     );
   }
 }

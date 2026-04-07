@@ -30,6 +30,7 @@ type Service interface {
 	FindContractByID(id uint) (*models.Contract, error)
 	CreateContractAddress(addr *models.ContractAddress) error
 	FindContractAddressByID(id uint) (*models.ContractAddress, error)
+	FindContractByClientID(id uint) ([]models.Contract, error)
 
 	// Product methods
 	CreateProduct(product *models.Product) error
@@ -112,6 +113,7 @@ func SetupRoutes(router *gin.Engine, service Service) {
 		// --- Contracts ---
 		protected.POST("/contracts", CreateContractHandler(service))
 		protected.GET("/contracts/:id", GetContractByIDHandler(service))
+		protected.GET("/contracts/client/:id", GetContractByClientIDHandler(service))
 
 		// --- ContractAddresses ---
 		protected.POST("/contract_addresses", CreateContractAddressHandler(service))

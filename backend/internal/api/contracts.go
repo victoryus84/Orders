@@ -147,6 +147,30 @@ func GetContractByIDHandler(s Service) gin.HandlerFunc {
 	}
 }
 
+func GetContractByClientIDHandler(s Service) gin.HandlerFunc {
+return func(c *gin.Context) {
+        // 1. Extrage ID-ul clientului din URL
+        clientIDStr := c.Param("id")
+        
+        // 2. Convertește-l la tipul tău de date (de obicei uint sau int)
+        clientID, err := strconv.ParseUint(clientIDStr, 10, 64)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "ID client invalid"})
+            return
+        }
+
+        // 3. Apeleză serviciul pentru a aduce datele
+        // Presupunem că metoda se numește GetByClientID și returnează []Contract, error
+        contracts, err := s.FindContractByClientID(uint(clientID))
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Nu s-au putut recupera contractele"})
+            return
+        }
+
+        // 4. Returnează lista de contracte
+        c.JSON(http.StatusOK, contracts)
+    }
+}
 // Contract Address handlers
 
 func CreateContractAddressHandler(s Service) gin.HandlerFunc {

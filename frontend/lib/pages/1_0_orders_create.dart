@@ -3,6 +3,7 @@ import '../models/client.dart';
 import '../models/contract.dart';
 import '../services/api_service.dart';
 import '../controllers/order_controller.dart';
+import '../core/logger.dart';
 
 class OrdersCreatePage extends StatefulWidget {
   final String title;
@@ -65,12 +66,48 @@ class _OrdersCreatePageState extends State<OrdersCreatePage> {
     );
   }
 
-  Widget _buildClientAutocomplete() {
+Widget _buildClientAutocomplete() {
     return Autocomplete<Client>(
-      // REZOLVARE INT/STRING: Ne asigurăm că name este transformat în String
+      // 1. Aici transformăm obiectul în text pentru listă
       displayStringForOption: (Client c) => c.name.toString(),
-      optionsBuilder: (textValue) => _api.searchClients(textValue.text),
-      onSelected: _controller.selectClient,
+
+      // 2. Aici se întâmplă "magia" căutării
+      optionsBuilder: (TextEditingValue textValue) async {
+        if (textValue.text.length < 3) return const Iterable<Client>.empty();
+
+        // 1. Luăm Messenger-ul ÎNAINTE de await (aici context e sigur valid)
+        final messenger = ScaffoldMessenger.of(context);
+
+        // 2. Facem cererea la server
+        final rezultate = await _api.searchClients(textValue.text);
+
+        // 3. Verificăm dacă pagina mai e pe ecran (ca să nu facem prostii)
+        if (!mounted) return rezultate;
+
+        // 4. Folosim 'messenger' (variabila salvată), NU mai scriem 'context' aici!
+        messenger.clearSnackBars();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              rezultate.isEmpty
+                  ? "Nimic găsit pentru '${textValue.text}'"
+                  : "Am găsit ${rezultate.length} clienți",
+            ),
+            backgroundColor: rezultate.isEmpty ? Colors.orange : Colors.blue,
+            duration: const Duration(milliseconds: 800),
+          ),
+        );
+
+        return rezultate;
+      },
+
+      // 3. Ce se întâmplă când dai click pe un client din listă
+      onSelected: (Client selection) {
+        _controller.selectClient(selection);
+        myLog("Client selectat: ${selection.name}");
+      },
+
+      // 4. Cum arată câmpul unde scrii
       fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
         return TextFormField(
           controller: textController,
