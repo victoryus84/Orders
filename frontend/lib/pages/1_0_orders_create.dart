@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../models/client.dart';
 import '../models/contract.dart';
 import '../services/api_service.dart';
@@ -66,7 +67,7 @@ class _OrdersCreatePageState extends State<OrdersCreatePage> {
     );
   }
 
-Widget _buildClientAutocomplete() {
+  Widget _buildClientAutocomplete() {
     return Autocomplete<Client>(
       // 1. Aici transformăm obiectul în text pentru listă
       displayStringForOption: (Client c) => c.name.toString(),
@@ -85,18 +86,20 @@ Widget _buildClientAutocomplete() {
         if (!mounted) return rezultate;
 
         // 4. Folosim 'messenger' (variabila salvată), NU mai scriem 'context' aici!
-        messenger.clearSnackBars();
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              rezultate.isEmpty
-                  ? "Nimic găsit pentru '${textValue.text}'"
-                  : "Am găsit ${rezultate.length} clienți",
+        if (kDebugMode) {
+          messenger.clearSnackBars();
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                rezultate.isEmpty
+                    ? "Ничего не найдено по запросу '${textValue.text}'"
+                    : "Найдено клиентов: ${rezultate.length}",
+              ),
+              backgroundColor: rezultate.isEmpty ? Colors.orange : Colors.blue,
+              duration: const Duration(milliseconds: 800),
             ),
-            backgroundColor: rezultate.isEmpty ? Colors.orange : Colors.blue,
-            duration: const Duration(milliseconds: 800),
-          ),
-        );
+          );
+        }
 
         return rezultate;
       },
@@ -113,7 +116,7 @@ Widget _buildClientAutocomplete() {
           controller: textController,
           focusNode: focusNode,
           decoration: const InputDecoration(
-            labelText: "Selectați Clientul",
+            labelText: "Клиент",
             prefixIcon: Icon(Icons.person_search),
             border: OutlineInputBorder(),
           ),
@@ -128,7 +131,7 @@ Widget _buildClientAutocomplete() {
       // REZOLVARE DEPRECATION: initialValue în loc de value
       initialValue: _controller.selectedContract,
       decoration: InputDecoration(
-        labelText: "Contract",
+        labelText: "Договор",
         border: const OutlineInputBorder(),
         suffixIcon: _controller.isLoadingContracts
             ? const SizedBox(
@@ -140,12 +143,12 @@ Widget _buildClientAutocomplete() {
       ),
       hint: Text(
         _controller.selectedClient == null
-            ? "Alegeți clientul mai întâi"
-            : "Selectați contractul",
+            ? "Сначала выберите клиента"
+            : "Нет договоров для выбранного клиента",
       ),
       items: _controller.availableContracts
           .map(
-            (c) => DropdownMenuItem(
+            (c) => DropdownMenuItem<Contract>(
               value: c,
               // REZOLVARE INT/STRING: toString() forțează conversia
               child: Text(c.name.toString()),
