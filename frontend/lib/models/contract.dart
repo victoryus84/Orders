@@ -15,7 +15,7 @@ class Contract {
                   json['Name'] ?? // varianta Go standard
                   json['number'] ?? // poate e numarul contractului
                   json['Number'] ?? // varianta 1C/Go mare
-                  'Contract fǎrǎ nume') // fallback
+                  'Договор без названия') // fallback
               .toString(),
     );
   }

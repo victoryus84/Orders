@@ -15,33 +15,48 @@ class OrdersCreatePage extends StatefulWidget {
 }
 
 class _OrdersCreatePageState extends State<OrdersCreatePage> {
-  final OrderCreateController _controller = OrderCreateController();
+  // Folosim late pentru a inițializa controller-ul o singură dată
+  late final OrderCreateController _controller;
   final ApiService _api = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = OrderCreateController();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(title: Text(widget.title), centerTitle: true),
       body: ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildPaymentDropdown(),
-                const SizedBox(height: 24),
-                _buildClientAutocomplete(),
-                const SizedBox(height: 24),
-                // ADAUGĂM UN KEY: Acest lucru forțează resetarea dropdown-ului
-                // de contracte când se schimbă clientul selectat.
-                _buildContractDropdown(
-                  key: ValueKey(_controller.selectedClient?.id ?? 'none'),
-                ),
-                const SizedBox(height: 40),
-                _buildSubmitButton(),
-              ],
+          return GestureDetector(
+            // Închide tastatura când dai click pe fundal
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment
+                    .stretch, // Face butoanele lățime completă
+                children: [
+                  _buildPaymentDropdown(),
+                  const SizedBox(height: 20),
+                  _buildClientAutocomplete(),
+                  const SizedBox(height: 20),
+
+                  // Contract Dropdown cu resetare automată la schimbarea clientului
+                  _buildContractDropdown(
+                    key: ValueKey(
+                      'contract_${_controller.selectedClient?.id ?? 'none'}',
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+                  _buildSubmitButton(),
+                ],
+              ),
             ),
           );
         },
@@ -49,14 +64,14 @@ class _OrdersCreatePageState extends State<OrdersCreatePage> {
     );
   }
 
-  // --- COMPONENTELE EXTRASE ---
+  // --- COMPONENTE ---
 
   Widget _buildPaymentDropdown() {
     return DropdownButtonFormField<String>(
-      // REZOLVARE DEPRECATION: Folosim initialValue în loc de value
-      initialValue: _controller.paymentType,
+      initialValue: _controller.paymentType, // Folosim initialValue pentru consistență cu controller-ul
       decoration: const InputDecoration(
-        labelText: "Tip Plată",
+        labelText: "Тип оплаты",
+        prefixIcon: Icon(Icons.payments_outlined),
         border: OutlineInputBorder(),
       ),
       items: const [
@@ -69,56 +84,44 @@ class _OrdersCreatePageState extends State<OrdersCreatePage> {
 
   Widget _buildClientAutocomplete() {
     return Autocomplete<Client>(
-      // 1. Aici transformăm obiectul în text pentru listă
-      displayStringForOption: (Client c) => c.name.toString(),
-
-      // 2. Aici se întâmplă "magia" căutării
+      displayStringForOption: (Client c) => c.name,
       optionsBuilder: (TextEditingValue textValue) async {
         if (textValue.text.length < 3) return const Iterable<Client>.empty();
 
-        // 1. Luăm Messenger-ul ÎNAINTE de await (aici context e sigur valid)
         final messenger = ScaffoldMessenger.of(context);
-
-        // 2. Facem cererea la server
         final rezultate = await _api.searchClients(textValue.text);
 
-        // 3. Verificăm dacă pagina mai e pe ecran (ca să nu facem prostii)
         if (!mounted) return rezultate;
 
-        // 4. Folosim 'messenger' (variabila salvată), NU mai scriem 'context' aici!
-        if (kDebugMode) {
-          messenger.clearSnackBars();
+        if (kDebugMode && rezultate.isEmpty) {
           messenger.showSnackBar(
             SnackBar(
-              content: Text(
-                rezultate.isEmpty
-                    ? "Ничего не найдено по запросу '${textValue.text}'"
-                    : "Найдено клиентов: ${rezultate.length}",
-              ),
-              backgroundColor: rezultate.isEmpty ? Colors.orange : Colors.blue,
-              duration: const Duration(milliseconds: 800),
+              content: Text("Ничего не найдено pentru '${textValue.text}'"),
+              duration: const Duration(seconds: 1),
             ),
           );
         }
-
         return rezultate;
       },
-
-      // 3. Ce se întâmplă când dai click pe un client din listă
       onSelected: (Client selection) {
         _controller.selectClient(selection);
-        myLog("Client selectat: ${selection.name}");
+        myLog("✅ Client selectat: ${selection.name}");
       },
-
-      // 4. Cum arată câmpul unde scrii
       fieldViewBuilder: (context, textController, focusNode, onFieldSubmitted) {
         return TextFormField(
           controller: textController,
           focusNode: focusNode,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: "Клиент",
-            prefixIcon: Icon(Icons.person_search),
-            border: OutlineInputBorder(),
+            hintText: "Min. 3 litere...",
+            prefixIcon: const Icon(Icons.person_search),
+            suffixIcon: textController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () => textController.clear(),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
           ),
         );
       },
@@ -127,16 +130,20 @@ class _OrdersCreatePageState extends State<OrdersCreatePage> {
 
   Widget _buildContractDropdown({Key? key}) {
     return DropdownButtonFormField<Contract>(
-      key: key, // Folosim cheia pentru resetare
-      // REZOLVARE DEPRECATION: initialValue în loc de value
+      key: key,
+      isExpanded: true,
       initialValue: _controller.selectedContract,
       decoration: InputDecoration(
         labelText: "Договор",
         border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 15,
+        ),
+        prefixIcon: const Icon(Icons.description_outlined),
         suffixIcon: _controller.isLoadingContracts
-            ? const SizedBox(
-                width: 20,
-                height: 20,
+            ? const Padding(
+                padding: EdgeInsets.all(12.0),
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : null,
@@ -144,17 +151,30 @@ class _OrdersCreatePageState extends State<OrdersCreatePage> {
       hint: Text(
         _controller.selectedClient == null
             ? "Сначала выберите клиента"
-            : "Нет договоров для выбранного клиента",
+            : "Выберите договор",
+        overflow: TextOverflow.ellipsis,
       ),
-      items: _controller.availableContracts
-          .map(
-            (c) => DropdownMenuItem<Contract>(
-              value: c,
-              // REZOLVARE INT/STRING: toString() forțează conversia
-              child: Text(c.name.toString()),
-            ),
-          )
-          .toList(),
+      // Mapăm lista de contracte cu protecție la Overflow
+      items: _controller.availableContracts.map((c) {
+        return DropdownMenuItem<Contract>(
+          value: c,
+          child: LayoutBuilder(
+            // Folosim LayoutBuilder pentru a afla lățimea exactă disponibilă
+            builder: (context, constraints) {
+              return SizedBox(
+                width: constraints
+                    .maxWidth, // Forțează textul să știe cât spațiu are
+                child: Text(
+                  c.name,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  softWrap: false,
+                ),
+              );
+            },
+          ),
+        );
+      }).toList(),
       onChanged: _controller.isLoadingContracts
           ? null
           : (val) => _controller.selectContract(val),
@@ -162,18 +182,27 @@ class _OrdersCreatePageState extends State<OrdersCreatePage> {
   }
 
   Widget _buildSubmitButton() {
-    return ElevatedButton(
-      onPressed: _controller.isValid ? () => _handleSave() : null,
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size.fromHeight(50),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    final bool isReady = _controller.isValid;
+    return ElevatedButton.icon(
+      onPressed: isReady ? () => _handleSave() : null,
+      icon: const Icon(Icons.save),
+      label: const Text(
+        "СОЗДАТЬ ЗАКАЗ",
+        style: TextStyle(fontWeight: FontWeight.bold),
       ),
-      child: const Text("СОЗДАТЬ ЗАКАЗ"),
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(55),
+        backgroundColor: isReady ? Colors.green : Colors.grey[300],
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 
   void _handleSave() {
-    // Folosim string interpolation "${...}" pentru a evita erorile de tip la print/log
-    debugPrint("Salvare comandă pentru: ${_controller.selectedClient?.name}");
+    myLog(
+      "🚀 Salvare comandă: Client: ${_controller.selectedClient?.name}, Contract: ${_controller.selectedContract?.name}",
+    );
+    // Aici vine apelul tău de POST către Go
   }
 }

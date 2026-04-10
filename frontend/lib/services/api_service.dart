@@ -37,7 +37,7 @@ class ApiService {
 Future<List<Contract>> fetchContracts(String clientId) async {
     try {
       // 1. Apelăm ruta stabilită în Gin
-      final url = Uri.parse('${AppConfig.baseUrl}/contracts/client/$clientId');
+      final url = Uri.parse('${AppConfig.contractsEndpointByClient}/$clientId');
       final response = await http.get(url, headers: AuthService.getHeaders());
 
       // 2. Folosim myLog (așa cum trebuie!) pentru a vedea JSON-ul
